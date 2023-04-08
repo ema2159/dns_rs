@@ -147,13 +147,34 @@ impl DNSPacketBuffer {
 mod tests {
     use super::*;
 
-    const TEST_HEADER: [u8; 10] = [0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]; 
-    const PACKET_TAIL: [u8; 502] = [0; 502]; 
- 
+    const TEST_HEADER: [u8; 10] = [0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00];
+    const PACKET_TAIL: [u8; 502] = [0; 502];
+
     #[test]
-    fn test_id() {
-        let packet_data: [u8; 512] = [&TEST_HEADER[..], &PACKET_TAIL[..]].concat().try_into().unwrap();
-        let data_buffer = DNSPacketBuffer::new(packet_data);
-        assert_eq!(data_buffer.get_id().unwrap(), 0x862a);
+    fn test_dnsheader() {
+        let packet_data: [u8; 512] = [&TEST_HEADER[..], &PACKET_TAIL[..]]
+            .concat()
+            .try_into()
+            .unwrap();
+        let dns_buffer = DNSPacketBuffer::new(packet_data);
+        let dns_header = dns_buffer.read_header().unwrap();
+
+        let expected_dns_header = DNSHeader{
+            id: 0x862a,
+            query_response: false,
+            opcode: 0,
+            authoritative_answer: false,
+            truncated_message: false,
+            recursion_desired: true,
+            recursion_available: false,
+            reserved: 2,
+            response_code: 0,
+            question_count: 1,
+            answer_count: 0,
+            authority_count: 0,
+            additional_count: 0,
+        };
+        
+        assert_eq!(dns_header, expected_dns_header);
     }
 }
