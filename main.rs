@@ -190,23 +190,23 @@ impl DNSPacketBuffer {
 mod tests {
     use super::*;
 
-    const TEST_HEAD: [u8; 28] = [
-        0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67, 0x6f,
-        0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
-    ];
-    const TEST_TAIL: [u8; 484] = [0; 484];
-
     #[test]
     fn test_dnspacket() {
-        let packet_data: [u8; 512] = [&TEST_HEAD[..], &TEST_TAIL[..]]
-            .concat()
-            .try_into()
-            .unwrap();
-        let mut dns_buffer = DNSPacketBuffer::new(packet_data);
-        let dns_header = dns_buffer.extract_header().unwrap();
-        let question = dns_buffer.extract_question().unwrap();
+        let mut dns_packet_buffer: [u8; 512] = [0; 512];
+        let dns_packet_data: [u8; 51] = [
+            0x86, 0x2a, 0x01, 0x20, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
+            0x77, 0x77, 0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
+            0x00, 0x01, 0x00, 0x01, 0x03, 0x77, 0x77, 0x77, 0x05, 0x79, 0x61, 0x68, 0x6F, 0x6F,
+            0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00, 0x01, 0x00, 0x00,
+        ];
 
-        let expected_dns_header = DNSHeader {
+        dns_packet_buffer[0..51].clone_from_slice(&dns_packet_data);
+
+        let parsed_dns_packet = DNSPacketBuffer::new(dns_packet_buffer)
+            .parse_dns_packet()
+            .unwrap();
+
+        let expected_header = DNSHeader {
             id: 0x862a,
             query_response: false,
             opcode: 0,
@@ -216,19 +216,31 @@ mod tests {
             recursion_available: false,
             reserved: 2,
             response_code: DNSResponseCode::NOERROR,
-            question_count: 1,
+            question_count: 2,
             answer_count: 0,
             authority_count: 0,
             additional_count: 0,
         };
 
-        let expected_questions = vec![DNSQuestion {
-            label_sequence: "google.com".to_string(),
-            record_type: 0x01,
-            class: 0x01,
-        }];
+        let expected_questions = vec![
+            DNSQuestion {
+                label_sequence: "www.google.com".to_string(),
+                record_type: 0x01,
+                class: 0x01,
+            },
+            DNSQuestion {
+                label_sequence: "www.yahoo.com".to_string(),
+                record_type: 0x01,
+                class: 0x00,
+            },
+        ];
 
-        assert_eq!(dns_header, expected_dns_header);
-        assert_eq!(question, expected_questions[0]);
+        let expected_packet = DNSPacket {
+            header: expected_header,
+            questions: expected_questions,
+        };
+
+        assert_eq!(parsed_dns_packet.header, expected_packet.header);
+        assert_eq!(parsed_dns_packet.questions, expected_packet.questions);
     }
 }
