@@ -164,6 +164,14 @@ impl DNSPacketBuffer {
             class,
         })
     }
+
+    fn extract_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
+        let mut questions = Vec::<DNSQuestion>::new();
+        for _ in 0..num_questions {
+            questions.push(self.extract_question()?);
+        }
+        Ok(questions)
+    }
 }
 
 #[cfg(test)]
