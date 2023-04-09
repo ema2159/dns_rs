@@ -170,19 +170,21 @@ impl DNSPacketBuffer {
 mod tests {
     use super::*;
 
-    const TEST_HEADER: [u8; 12] = [
-        0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    const TEST_HEAD: [u8; 28] = [
+        0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67, 0x6f,
+        0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
     ];
-    const PACKET_TAIL: [u8; 500] = [0; 500];
+    const TEST_TAIL: [u8; 484] = [0; 484];
 
     #[test]
-    fn test_dnsheader() {
-        let packet_data: [u8; 512] = [&TEST_HEADER[..], &PACKET_TAIL[..]]
+    fn test_dnspacket() {
+        let packet_data: [u8; 512] = [&TEST_HEAD[..], &TEST_TAIL[..]]
             .concat()
             .try_into()
             .unwrap();
         let mut dns_buffer = DNSPacketBuffer::new(packet_data);
         let dns_header = dns_buffer.extract_header().unwrap();
+        let question = dns_buffer.extract_question().unwrap();
 
         let expected_dns_header = DNSHeader {
             id: 0x862a,
@@ -200,6 +202,13 @@ mod tests {
             additional_count: 0,
         };
 
+        let expected_questions = vec![DNSQuestion {
+            label_sequence: "google.com".to_string(),
+            record_type: 0x01,
+            class: 0x01,
+        }];
+
         assert_eq!(dns_header, expected_dns_header);
+        assert_eq!(question, expected_questions[0]);
     }
 }
