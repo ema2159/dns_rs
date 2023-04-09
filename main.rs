@@ -101,8 +101,8 @@ impl DNSPacketBuffer {
 mod tests {
     use super::*;
 
-    const TEST_HEADER: [u8; 10] = [0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00];
-    const PACKET_TAIL: [u8; 502] = [0; 502];
+    const TEST_HEADER: [u8; 12] = [0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+    const PACKET_TAIL: [u8; 500] = [0; 500];
 
     #[test]
     fn test_dnsheader() {
@@ -110,8 +110,8 @@ mod tests {
             .concat()
             .try_into()
             .unwrap();
-        let dns_buffer = DNSPacketBuffer::new(packet_data);
-        let dns_header = dns_buffer.read_header().unwrap();
+        let mut dns_buffer = DNSPacketBuffer::new(packet_data);
+        let dns_header = dns_buffer.extract_header().unwrap();
 
         let expected_dns_header = DNSHeader {
             id: 0x862a,
