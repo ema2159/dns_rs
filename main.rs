@@ -1,8 +1,10 @@
 #![allow(dead_code)]
 
 #[derive(Debug)]
-enum PacketReadError {
+enum DNSPacketErr {
     EndOfBufferErr,
+    BadPointerPositionErr,
+    UnknownResponseCodeErr
 }
 
 #[derive(Debug)]
@@ -31,7 +33,11 @@ struct DNSHeader {
 
 
 impl DNSHeader {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, PacketReadError> {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+        if buffer.pos != 0 {
+            return Err(DNSPacketErr::BadPointerPositionErr);
+        }
+
         let id = buffer.read_u16()?;
 
         let mut next_byte = buffer.read_u8()?;
@@ -40,7 +46,6 @@ impl DNSHeader {
         let authoritative_answer = next_byte & 0b0000_0100 != 0;
         let truncated_message = next_byte & 0b0000_010 != 0;
         let recursion_desired = next_byte & 0b0000_001 != 0;
-
 
         next_byte = buffer.read_u8()?;
         let recursion_available = next_byte & 0b1000_0000 != 0;
@@ -75,26 +80,27 @@ impl DNSPacketBuffer {
         DNSPacketBuffer { data, pos: 0 }
     }
 
-    fn extract_header(&mut self) -> Result<DNSHeader, PacketReadError> {
-       let header = DNSHeader::parse_from_buffer(self);
-       header
+    fn extract_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
+        let header = DNSHeader::parse_from_buffer(self);
+        header
     }
 
-    fn read_u8(&mut self) -> Result<u8, PacketReadError> {
+    fn read_u8(&mut self) -> Result<u8, DNSPacketErr> {
         if self.pos >= 512 {
-            return Err(PacketReadError::EndOfBufferErr);
+            return Err(DNSPacketErr::EndOfBufferErr);
         }
         let res = self.data[self.pos];
         self.pos += 1;
-        return Ok(res)
+        return Ok(res);
     }
 
-    fn read_u16(&mut self) -> Result<u16, PacketReadError> {
+    fn read_u16(&mut self) -> Result<u16, DNSPacketErr> {
         let high = (self.read_u8()? as u16) << 8;
         let low = self.read_u8()? as u16;
 
-        return Ok(high | low)
+        return Ok(high | low);
     }
+
 }
 
 #[cfg(test)]
