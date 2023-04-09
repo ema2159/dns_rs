@@ -113,14 +113,15 @@ impl DNSHeader {
     }
 }
 
+#[derive(Debug, PartialEq)]
+struct DNSPacket {
+    header: DNSHeader,
+    questions: Vec<DNSQuestion>,
+}
+
 impl DNSPacketBuffer {
     pub fn new(data: [u8; 512]) -> Self {
         DNSPacketBuffer { data, pos: 0 }
-    }
-
-    fn extract_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
-        let header = DNSHeader::parse_from_buffer(self);
-        header
     }
 
     fn read_u8(&mut self) -> Result<u8, DNSPacketErr> {
@@ -139,8 +140,12 @@ impl DNSPacketBuffer {
         return Ok(high | low);
     }
 
+    fn extract_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
+        let header = DNSHeader::parse_from_buffer(self);
+        header
+    }
+
     fn extract_question(&mut self) -> Result<DNSQuestion, DNSPacketErr> {
-        println!("{}", self.pos);
         let mut label_size = self.read_u8()?;
         let mut labels_buf = Vec::<u8>::new();
 
@@ -171,6 +176,13 @@ impl DNSPacketBuffer {
             questions.push(self.extract_question()?);
         }
         Ok(questions)
+    }
+
+    fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
+        let header = self.extract_header()?;
+        let num_questions = header.question_count;
+        let questions = self.extract_questions(num_questions)?;
+        Ok(DNSPacket { header, questions })
     }
 }
 
