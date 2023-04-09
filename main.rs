@@ -4,7 +4,8 @@
 enum DNSPacketErr {
     EndOfBufferErr,
     BadPointerPositionErr,
-    UnknownResponseCodeErr
+    UnknownResponseCodeErr,
+    QuestionParsingErr,
 }
 
 #[derive(Debug)]
@@ -40,7 +41,7 @@ impl DNSResponseCode {
             7 => Ok(Self::XRRSET),
             8 => Ok(Self::NOTAUTH),
             9 => Ok(Self::NOTZONE),
-            _ => Err(DNSPacketErr::UnknownResponseCodeErr)
+            _ => Err(DNSPacketErr::UnknownResponseCodeErr),
         }
     }
 }
@@ -60,6 +61,13 @@ struct DNSHeader {
     answer_count: u16,              // 2 bytes
     authority_count: u16,           // 2 bytes
     additional_count: u16,          // 2 bytes
+}
+
+#[derive(Debug, PartialEq)]
+struct DNSQuestion {
+    label_sequence: String, // Variable length
+    record_type: u16,       // 2 bytes
+    class: u16,             // 2 bytes
 }
 
 impl DNSHeader {
@@ -131,6 +139,31 @@ impl DNSPacketBuffer {
         return Ok(high | low);
     }
 
+    fn extract_question(&mut self) -> Result<DNSQuestion, DNSPacketErr> {
+        println!("{}", self.pos);
+        let mut label_size = self.read_u8()?;
+        let mut labels_buf = Vec::<u8>::new();
+
+        // Parse each label until a 0 label_size byte is encountered
+        while label_size != 0 {
+            for _ in 0..label_size {
+                labels_buf.push(self.read_u8()?);
+            }
+            labels_buf.push(b'.');
+            label_size = self.read_u8()?;
+        }
+        labels_buf.pop(); // Remove last '.' in domain name i.e. avoid www.google.com.
+
+        let label_sequence =
+            String::from_utf8(labels_buf).or_else(|_| Err(DNSPacketErr::QuestionParsingErr))?;
+        let record_type = self.read_u16()?;
+        let class = self.read_u16()?;
+        Ok(DNSQuestion {
+            label_sequence,
+            record_type,
+            class,
+        })
+    }
 }
 
 #[cfg(test)]
