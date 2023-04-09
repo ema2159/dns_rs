@@ -137,7 +137,9 @@ impl DNSPacketBuffer {
 mod tests {
     use super::*;
 
-    const TEST_HEADER: [u8; 12] = [0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+    const TEST_HEADER: [u8; 12] = [
+        0x86, 0x2a, 0x01, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ];
     const PACKET_TAIL: [u8; 500] = [0; 500];
 
     #[test]
@@ -158,7 +160,7 @@ mod tests {
             recursion_desired: true,
             recursion_available: false,
             reserved: 2,
-            response_code: 0,
+            response_code: DNSResponseCode::NOERROR,
             question_count: 1,
             answer_count: 0,
             authority_count: 0,
