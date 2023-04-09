@@ -14,23 +14,53 @@ struct DNSPacketBuffer {
 }
 
 #[derive(Debug, PartialEq)]
-struct DNSHeader {
-    id: u16,                    // 2 bytes
-    query_response: bool,       // 1 bit
-    opcode: u8,                 // 4 bits
-    authoritative_answer: bool, // 1 bit
-    truncated_message: bool,    // 1 bit
-    recursion_desired: bool,    // 1 bit
-    recursion_available: bool,  // 1 bit
-    reserved: u8,               // 3 bits
-    response_code: u8,          // 4 bits
-    question_count: u16,        // 2 bytes
-    answer_count: u16,          // 2 bytes
-    authority_count: u16,       // 2 bytes
-    additional_count: u16,      // 2 bytes
+enum DNSResponseCode {
+    NOERROR,
+    FORMERR,
+    SERVFAIL,
+    NXDOMAIN,
+    NOTIMP,
+    REFUSED,
+    YXDOMAIN,
+    XRRSET,
+    NOTAUTH,
+    NOTZONE,
 }
 
+impl DNSResponseCode {
+    fn from_num(code_num: u8) -> Result<DNSResponseCode, DNSPacketErr> {
+        match code_num {
+            0 => Ok(Self::NOERROR),
+            1 => Ok(Self::FORMERR),
+            2 => Ok(Self::SERVFAIL),
+            3 => Ok(Self::NXDOMAIN),
+            4 => Ok(Self::NOTIMP),
+            5 => Ok(Self::REFUSED),
+            6 => Ok(Self::YXDOMAIN),
+            7 => Ok(Self::XRRSET),
+            8 => Ok(Self::NOTAUTH),
+            9 => Ok(Self::NOTZONE),
+            _ => Err(DNSPacketErr::UnknownResponseCodeErr)
+        }
+    }
+}
 
+#[derive(Debug, PartialEq)]
+struct DNSHeader {
+    id: u16,                        // 2 bytes
+    query_response: bool,           // 1 bit
+    opcode: u8,                     // 4 bits
+    authoritative_answer: bool,     // 1 bit
+    truncated_message: bool,        // 1 bit
+    recursion_desired: bool,        // 1 bit
+    recursion_available: bool,      // 1 bit
+    reserved: u8,                   // 3 bits
+    response_code: DNSResponseCode, // 4 bits
+    question_count: u16,            // 2 bytes
+    answer_count: u16,              // 2 bytes
+    authority_count: u16,           // 2 bytes
+    additional_count: u16,          // 2 bytes
+}
 
 impl DNSHeader {
     fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
@@ -50,7 +80,7 @@ impl DNSHeader {
         next_byte = buffer.read_u8()?;
         let recursion_available = next_byte & 0b1000_0000 != 0;
         let reserved = (next_byte & 0b0111_0000) >> 4;
-        let response_code = next_byte & 0b0000_1111;
+        let response_code = DNSResponseCode::from_num(next_byte & 0b0000_1111)?;
 
         let question_count = buffer.read_u16()?;
         let answer_count = buffer.read_u16()?;
