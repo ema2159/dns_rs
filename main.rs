@@ -145,7 +145,7 @@ impl DNSPacketBuffer {
         header
     }
 
-    fn extract_question(&mut self) -> Result<DNSQuestion, DNSPacketErr> {
+    fn extract_label(&mut self) -> Result<String, DNSPacketErr> {
         let mut label_size = self.read_u8()?;
         let mut labels_buf = Vec::<u8>::new();
 
@@ -161,6 +161,12 @@ impl DNSPacketBuffer {
 
         let label_sequence =
             String::from_utf8(labels_buf).or_else(|_| Err(DNSPacketErr::QuestionParsingErr))?;
+
+        Ok(label_sequence)
+    }
+
+    fn extract_question(&mut self) -> Result<DNSQuestion, DNSPacketErr> {
+        let label_sequence = self.extract_label()?;
         let record_type = self.read_u16()?;
         let class = self.read_u16()?;
         Ok(DNSQuestion {
