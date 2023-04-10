@@ -5,7 +5,7 @@ enum DNSPacketErr {
     EndOfBufferErr,
     BadPointerPositionErr,
     UnknownResponseCodeErr,
-    LabelParsingErr,
+    NonUTF8LabelErr,
 }
 
 #[derive(Debug)]
@@ -179,6 +179,7 @@ impl DNSPacketBuffer {
             String::from_utf8(labels_buf).or_else(|_| Err(DNSPacketErr::LabelParsingErr))?;
 
         Ok(label_sequence)
+            .or_else(|_| Err(DNSPacketErr::NonUTF8LabelErr))?)
     }
 
     fn extract_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
