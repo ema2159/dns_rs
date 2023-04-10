@@ -178,7 +178,7 @@ impl DNSPacketBuffer {
         Ok(questions)
     }
 
-    fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
+    pub fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
         let header = self.extract_header()?;
         let num_questions = header.question_count;
         let questions = self.extract_questions(num_questions)?;
