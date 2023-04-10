@@ -63,13 +63,6 @@ struct DNSHeader {
     additional_count: u16,          // 2 bytes
 }
 
-#[derive(Debug, PartialEq)]
-struct DNSQuestion {
-    label_sequence: String, // Variable length
-    record_type: u16,       // 2 bytes
-    class: u16,             // 2 bytes
-}
-
 impl DNSHeader {
     fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         if buffer.pos != 0 {
@@ -113,6 +106,29 @@ impl DNSHeader {
     }
 }
 
+#[derive(Debug, PartialEq)]
+struct DNSQuestion {
+    label_sequence: String, // Variable length
+    record_type: u16,       // 2 bytes
+    class: u16,             // 2 bytes
+}
+
+impl DNSQuestion {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+        if buffer.pos < 12 {
+            return Err(DNSPacketErr::BadPointerPositionErr);
+        }
+
+        let label_sequence = buffer.extract_label()?;
+        let record_type = buffer.read_u16()?;
+        let class = buffer.read_u16()?;
+        Ok(DNSQuestion {
+            label_sequence,
+            record_type,
+            class,
+        })
+    }
+}
 #[derive(Debug, PartialEq)]
 struct DNSPacket {
     header: DNSHeader,
@@ -165,21 +181,10 @@ impl DNSPacketBuffer {
         Ok(label_sequence)
     }
 
-    fn extract_question(&mut self) -> Result<DNSQuestion, DNSPacketErr> {
-        let label_sequence = self.extract_label()?;
-        let record_type = self.read_u16()?;
-        let class = self.read_u16()?;
-        Ok(DNSQuestion {
-            label_sequence,
-            record_type,
-            class,
-        })
-    }
-
     fn extract_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
         let mut questions = Vec::<DNSQuestion>::new();
         for _ in 0..num_questions {
-            questions.push(self.extract_question()?);
+            questions.push(DNSQuestion::parse_from_buffer(self)?);
         }
         Ok(questions)
     }
