@@ -5,7 +5,7 @@ enum DNSPacketErr {
     EndOfBufferErr,
     BadPointerPositionErr,
     UnknownResponseCodeErr,
-    QuestionParsingErr,
+    LabelParsingErr,
 }
 
 #[derive(Debug)]
@@ -160,7 +160,7 @@ impl DNSPacketBuffer {
         labels_buf.pop(); // Remove last '.' in domain name i.e. avoid www.google.com.
 
         let label_sequence =
-            String::from_utf8(labels_buf).or_else(|_| Err(DNSPacketErr::QuestionParsingErr))?;
+            String::from_utf8(labels_buf).or_else(|_| Err(DNSPacketErr::LabelParsingErr))?;
 
         Ok(label_sequence)
     }
