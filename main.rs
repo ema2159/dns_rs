@@ -4,7 +4,7 @@
 enum DNSPacketErr {
     EndOfBufferErr,
     BadPointerPositionErr,
-    UnknownResponseCodeErr,
+    UnknownResponseCodeErr(u8),
     NonUTF8LabelErr,
 }
 
@@ -41,7 +41,7 @@ impl DNSResponseCode {
             7 => Ok(Self::XRRSET),
             8 => Ok(Self::NOTAUTH),
             9 => Ok(Self::NOTZONE),
-            _ => Err(DNSPacketErr::UnknownResponseCodeErr),
+            _ => Err(DNSPacketErr::UnknownResponseCodeErr(code_num)),
         }
     }
 }
