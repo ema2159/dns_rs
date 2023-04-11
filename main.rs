@@ -123,7 +123,7 @@ impl DNSQuestion {
             return Err(DNSPacketErr::BadPointerPositionErr);
         }
 
-        let label_sequence = buffer.extract_domain(0)?;
+        let label_sequence = buffer.parse_domain(0)?;
         let record_type = buffer.read_u16()?;
         let class = buffer.read_u16()?;
         Ok(DNSQuestion {
@@ -169,7 +169,7 @@ struct DNSRecord {
 }
 
 impl DNSRecord {
-    fn extract_type_a(buffer: &mut DNSPacketBuffer) -> Result<DNSRecordType, DNSPacketErr> {
+    fn parse_type_a(buffer: &mut DNSPacketBuffer) -> Result<DNSRecordType, DNSPacketErr> {
         Ok(DNSRecordType::A(Ipv4Addr::from(buffer.read_u32()?)))
     }
 
@@ -179,14 +179,14 @@ impl DNSRecord {
         }
 
         let preamble = DNSRecordPreamble {
-            label_sequence: buffer.extract_domain(0)?,
+            label_sequence: buffer.parse_domain(0)?,
             record_type: DNSQueryType::from_num(buffer.read_u16()?)?,
             class: buffer.read_u16()?,
             ttl: buffer.read_u32()?,
             len: buffer.read_u16()?,
         };
         let data = match preamble.record_type {
-            DNSQueryType::A => Ok(DNSRecord::extract_type_a(buffer)?),
+            DNSQueryType::A => Ok(DNSRecord::parse_type_a(buffer)?),
         }?;
         Ok(DNSRecord { preamble, data })
     }
@@ -253,14 +253,14 @@ impl DNSPacketBuffer {
 
     /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
     /// header.
-    fn extract_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
+    fn parse_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
         let header = DNSHeader::parse_from_buffer(self);
         header
     }
 
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last label.
-    fn extract_domain(&mut self, jump: u8) -> Result<String, DNSPacketErr> {
+    fn parse_domain(&mut self, jump: u8) -> Result<String, DNSPacketErr> {
         const MAX_JUMPS: u8 = 5;
         if jump == MAX_JUMPS {
             return Err(DNSPacketErr::MaxJumpsErr);
@@ -278,7 +278,7 @@ impl DNSPacketBuffer {
                 let next_pos = self.pos + 2;
                 let jump_pos = self.read_u16()? ^ 0b1100_0000_0000_0000;
                 self.seek(jump_pos as usize);
-                let reused_labels = self.extract_domain(jump + 1)?;
+                let reused_labels = self.parse_domain(jump + 1)?;
                 labels_buf.push(reused_labels);
                 self.seek(next_pos);
                 break;
@@ -316,7 +316,7 @@ impl DNSPacketBuffer {
 
     /// Parse DNS questions starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last question.
-    fn extract_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
+    fn parse_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
         let mut questions = Vec::<DNSQuestion>::new();
         for _ in 0..num_questions {
             questions.push(DNSQuestion::parse_from_buffer(self)?);
@@ -326,7 +326,7 @@ impl DNSPacketBuffer {
 
     /// Parse DNS record starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last answer.
-    fn extract_records(&mut self, num_records: u16) -> Result<Vec<DNSRecord>, DNSPacketErr> {
+    fn parse_records(&mut self, num_records: u16) -> Result<Vec<DNSRecord>, DNSPacketErr> {
         let mut records = Vec::<DNSRecord>::new();
         for _ in 0..num_records {
             records.push(DNSRecord::parse_from_buffer(self)?);
@@ -336,11 +336,11 @@ impl DNSPacketBuffer {
 
     /// Parse DNS information.
     pub fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
-        let header = self.extract_header()?;
-        let questions = self.extract_questions(header.question_count)?;
-        let answers = self.extract_records(header.answer_count)?;
-        let authorities = self.extract_records(header.authority_count)?;
-        let additional_records = self.extract_records(header.additional_count)?;
+        let header = self.parse_header()?;
+        let questions = self.parse_questions(header.question_count)?;
+        let answers = self.parse_records(header.answer_count)?;
+        let authorities = self.parse_records(header.authority_count)?;
+        let additional_records = self.parse_records(header.additional_count)?;
         Ok(DNSPacket {
             header,
             questions,
