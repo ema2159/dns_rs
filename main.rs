@@ -140,20 +140,43 @@ impl DNSPacketBuffer {
         DNSPacketBuffer { data, pos: 0 }
     }
 
+    fn seek(&mut self, pos: usize) {
+        self.pos = pos;
+    }
+
+    fn get_u8(&self) -> Result<u8, DNSPacketErr> {
+        if self.pos >= 512 {
+            return Err(DNSPacketErr::EndOfBufferErr);
+        }
+        let res = self.data[self.pos];
+
+        Ok(res)
+    }
+
     fn read_u8(&mut self) -> Result<u8, DNSPacketErr> {
         if self.pos >= 512 {
             return Err(DNSPacketErr::EndOfBufferErr);
         }
         let res = self.data[self.pos];
         self.pos += 1;
-        return Ok(res);
+
+        Ok(res)
     }
 
     fn read_u16(&mut self) -> Result<u16, DNSPacketErr> {
         let high = (self.read_u8()? as u16) << 8;
         let low = self.read_u8()? as u16;
 
-        return Ok(high | low);
+        Ok(high | low)
+    }
+
+    fn read_u32(&mut self) -> Result<u32, DNSPacketErr> {
+        let first_byte = (self.read_u8()? as u32) << 24;
+        let second_byte = (self.read_u8()? as u32) << 16;
+        let third_byte = (self.read_u8()? as u32) << 8;
+        let fourth_byte = self.read_u8()? as u32;
+
+        Ok(first_byte | second_byte | third_byte | fourth_byte)
     }
 
     fn extract_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
