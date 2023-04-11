@@ -136,14 +136,17 @@ struct DNSPacket {
 }
 
 impl DNSPacketBuffer {
+    /// Initializes DNS packet buffer with the given data and its position pointer set to 0.
     pub fn new(data: [u8; 512]) -> Self {
         DNSPacketBuffer { data, pos: 0 }
     }
 
+    /// Set the buffer's position pointer to a given position.
     fn seek(&mut self, pos: usize) {
         self.pos = pos;
     }
 
+    /// Read byte at current position. Don't move position pointer.
     fn get_u8(&self) -> Result<u8, DNSPacketErr> {
         if self.pos >= 512 {
             return Err(DNSPacketErr::EndOfBufferErr);
@@ -153,6 +156,7 @@ impl DNSPacketBuffer {
         Ok(res)
     }
 
+    /// Read byte at current position and advance position pointer.
     fn read_u8(&mut self) -> Result<u8, DNSPacketErr> {
         if self.pos >= 512 {
             return Err(DNSPacketErr::EndOfBufferErr);
@@ -163,6 +167,7 @@ impl DNSPacketBuffer {
         Ok(res)
     }
 
+    /// Read two bytes at current position and advance position pointer.
     fn read_u16(&mut self) -> Result<u16, DNSPacketErr> {
         let high = (self.read_u8()? as u16) << 8;
         let low = self.read_u8()? as u16;
@@ -170,6 +175,7 @@ impl DNSPacketBuffer {
         Ok(high | low)
     }
 
+    /// Read four bytes at current position and advance position pointer.
     fn read_u32(&mut self) -> Result<u32, DNSPacketErr> {
         let first_byte = (self.read_u8()? as u32) << 24;
         let second_byte = (self.read_u8()? as u32) << 16;
@@ -179,6 +185,8 @@ impl DNSPacketBuffer {
         Ok(first_byte | second_byte | third_byte | fourth_byte)
     }
 
+    /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
+    /// header.
     fn extract_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
         let header = DNSHeader::parse_from_buffer(self);
         header
@@ -205,6 +213,8 @@ impl DNSPacketBuffer {
             .or_else(|_| Err(DNSPacketErr::NonUTF8LabelErr))?)
     }
 
+    /// Parse DNS questions starting from the current buffer pointer's position. Move pointer's
+    /// position to the byte after the last question.
     fn extract_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
         let mut questions = Vec::<DNSQuestion>::new();
         for _ in 0..num_questions {
@@ -213,6 +223,7 @@ impl DNSPacketBuffer {
         Ok(questions)
     }
 
+    /// Parse DNS information.
     pub fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
         let header = self.extract_header()?;
         let num_questions = header.question_count;
