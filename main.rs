@@ -6,6 +6,7 @@ enum DNSPacketErr {
     BadPointerPositionErr,
     UnknownResponseCodeErr(u8),
     NonUTF8LabelErr,
+    MaxJumpsErr,
 }
 
 #[derive(Debug)]
@@ -119,7 +120,7 @@ impl DNSQuestion {
             return Err(DNSPacketErr::BadPointerPositionErr);
         }
 
-        let label_sequence = buffer.extract_label()?;
+        let label_sequence = buffer.extract_domain(0)?;
         let record_type = buffer.read_u16()?;
         let class = buffer.read_u16()?;
         Ok(DNSQuestion {
@@ -192,25 +193,60 @@ impl DNSPacketBuffer {
         header
     }
 
-    fn extract_label(&mut self) -> Result<String, DNSPacketErr> {
-        let mut label_size = self.read_u8()?;
-        let mut labels_buf = Vec::<u8>::new();
-
-        // Parse each label until a 0 label_size byte is encountered
-        while label_size != 0 {
-            for _ in 0..label_size {
-                labels_buf.push(self.read_u8()?);
-            }
-            labels_buf.push(b'.');
-            label_size = self.read_u8()?;
+    /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
+    /// position to the byte after the last label.
+    fn extract_domain(&mut self, jump: u8) -> Result<String, DNSPacketErr> {
+        const MAX_JUMPS: u8 = 5;
+        if jump == MAX_JUMPS {
+            return Err(DNSPacketErr::MaxJumpsErr);
         }
-        labels_buf.pop(); // Remove last '.' in domain name i.e. avoid www.google.com.
 
-        let label_sequence =
-            String::from_utf8(labels_buf).or_else(|_| Err(DNSPacketErr::LabelParsingErr))?;
+        let mut labels_buf = Vec::<String>::new();
+
+        // Parse each label until a 0 label_size byte is encountered or until a label jump found
+        loop {
+            let jump_or_len_byte = self.get_u8()?;
+
+            // If two MSBs are 1, mask with 0xC000 and jump to that position to reuse a previous label,
+            // then jump back
+            if 0b1100_0000 & jump_or_len_byte == 0b1100_0000 {
+                let next_pos = self.pos + 2;
+                let jump_pos = self.read_u16()? ^ 0b1100_0000_0000_0000;
+                self.seek(jump_pos as usize);
+                let reused_labels = self.extract_domain(jump + 1)?;
+                labels_buf.push(reused_labels);
+                self.seek(next_pos);
+                break;
+            }
+
+            // If byte didn't indicate jump, then it indicates the label size
+            let label_size = self.read_u8()?;
+
+            // 0 size byte, finish parsing labels
+            if label_size == 0 {
+                break;
+            }
+
+            let mut label_buf = Vec::<u8>::new();
+
+            // [b'g', b'o', b'o', b'g', b'l', b'e']
+            for _ in 0..label_size {
+                label_buf.push(self.read_u8()?);
+            }
+
+            // [b'g', b'o', b'o', b'g', b'l', b'e'] -> "google"
+            let label = (String::from_utf8(label_buf)
+                .or_else(|_| Err(DNSPacketErr::NonUTF8LabelErr))?)
+            .to_lowercase();
+
+            // ["www"].push("google")
+            labels_buf.push(label);
+        }
+
+        // ["www", "google", "com"] -> "www.google.com"
+        let label_sequence = labels_buf.join(".");
 
         Ok(label_sequence)
-            .or_else(|_| Err(DNSPacketErr::NonUTF8LabelErr))?)
     }
 
     /// Parse DNS questions starting from the current buffer pointer's position. Move pointer's
