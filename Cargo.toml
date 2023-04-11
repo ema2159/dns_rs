@@ -1,5 +1,5 @@
 [package]
-name = "dns_rust"
+name = "dns_rs"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 
-[[bin]]
-name = "dns_rust"
-path = "main.rs"
+[lib]
+name = "dns_rs"
+path = "lib.rs"
