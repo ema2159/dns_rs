@@ -356,7 +356,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_dnspacket() {
+    fn test_query_packet() {
         let mut dns_packet_buffer: [u8; 512] = [0; 512];
         let dns_packet_data: [u8; 51] = [
             0x86, 0x2a, 0x01, 0x20, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
@@ -400,12 +400,20 @@ mod tests {
             },
         ];
 
+        let expected_answers = Vec::<DNSRecord>::new();
+        let expected_authorities = Vec::<DNSRecord>::new();
+        let expected_additional_records = Vec::<DNSRecord>::new();
+
         let expected_packet = DNSPacket {
             header: expected_header,
             questions: expected_questions,
+            answers: expected_answers,
+            authorities: expected_authorities,
+            additional_records: expected_additional_records,
         };
 
         assert_eq!(parsed_dns_packet.header, expected_packet.header);
         assert_eq!(parsed_dns_packet.questions, expected_packet.questions);
+        assert_eq!(parsed_dns_packet.answers, expected_packet.answers);
     }
 }
