@@ -1,10 +1,13 @@
 #![allow(dead_code)]
 
+use std::net::Ipv4Addr;
+
 #[derive(Debug)]
 enum DNSPacketErr {
     EndOfBufferErr,
     BadPointerPositionErr,
     UnknownResponseCodeErr(u8),
+    UnknownQueryTypeErr(u16),
     NonUTF8LabelErr,
     MaxJumpsErr,
 }
@@ -130,10 +133,72 @@ impl DNSQuestion {
         })
     }
 }
+
+#[derive(Debug, PartialEq)]
+struct DNSRecordPreamble {
+    label_sequence: String,    // Variable length
+    record_type: DNSQueryType, // 2 bytes
+    class: u16,                // 2 bytes
+    ttl: u32,                  // 4 bytes
+    len: u16,                  // 2 bytes
+}
+
+#[derive(Debug, PartialEq)]
+enum DNSRecordType {
+    A(Ipv4Addr),
+}
+
+#[derive(Debug, PartialEq)]
+enum DNSQueryType {
+    A,
+}
+
+impl DNSQueryType {
+    fn from_num(code_num: u16) -> Result<DNSQueryType, DNSPacketErr> {
+        match code_num {
+            1 => Ok(DNSQueryType::A),
+            _ => Err(DNSPacketErr::UnknownQueryTypeErr(code_num)),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct DNSRecord {
+    preamble: DNSRecordPreamble,
+    data: DNSRecordType,
+}
+
+impl DNSRecord {
+    fn extract_type_a(buffer: &mut DNSPacketBuffer) -> Result<DNSRecordType, DNSPacketErr> {
+        Ok(DNSRecordType::A(Ipv4Addr::from(buffer.read_u32()?)))
+    }
+
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+        if buffer.pos < 12 {
+            return Err(DNSPacketErr::BadPointerPositionErr);
+        }
+
+        let preamble = DNSRecordPreamble {
+            label_sequence: buffer.extract_domain(0)?,
+            record_type: DNSQueryType::from_num(buffer.read_u16()?)?,
+            class: buffer.read_u16()?,
+            ttl: buffer.read_u32()?,
+            len: buffer.read_u16()?,
+        };
+        let data = match preamble.record_type {
+            DNSQueryType::A => Ok(DNSRecord::extract_type_a(buffer)?),
+        }?;
+        Ok(DNSRecord { preamble, data })
+    }
+}
+
 #[derive(Debug, PartialEq)]
 struct DNSPacket {
     header: DNSHeader,
     questions: Vec<DNSQuestion>,
+    answers: Vec<DNSRecord>,
+    authorities: Vec<DNSRecord>,
+    additional_records: Vec<DNSRecord>,
 }
 
 impl DNSPacketBuffer {
@@ -259,12 +324,30 @@ impl DNSPacketBuffer {
         Ok(questions)
     }
 
+    /// Parse DNS record starting from the current buffer pointer's position. Move pointer's
+    /// position to the byte after the last answer.
+    fn extract_records(&mut self, num_records: u16) -> Result<Vec<DNSRecord>, DNSPacketErr> {
+        let mut records = Vec::<DNSRecord>::new();
+        for _ in 0..num_records {
+            records.push(DNSRecord::parse_from_buffer(self)?);
+        }
+        Ok(records)
+    }
+
     /// Parse DNS information.
     pub fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
         let header = self.extract_header()?;
-        let num_questions = header.question_count;
-        let questions = self.extract_questions(num_questions)?;
-        Ok(DNSPacket { header, questions })
+        let questions = self.extract_questions(header.question_count)?;
+        let answers = self.extract_records(header.answer_count)?;
+        let authorities = self.extract_records(header.authority_count)?;
+        let additional_records = self.extract_records(header.additional_count)?;
+        Ok(DNSPacket {
+            header,
+            questions,
+            answers,
+            authorities,
+            additional_records,
+        })
     }
 }
 
