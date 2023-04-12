@@ -8,15 +8,6 @@ use dns_packet_err::*;
 use dns_question::*;
 use dns_record::*;
 
-#[derive(Debug, PartialEq)]
-pub struct DNSPacket {
-    header: DNSHeader,
-    questions: Vec<DNSQuestion>,
-    answers: Vec<DNSRecord>,
-    authorities: Vec<DNSRecord>,
-    additional_records: Vec<DNSRecord>,
-}
-
 pub struct DNSPacketBuffer {
     data: [u8; 512],
     pos: usize,
@@ -71,42 +62,59 @@ impl DNSPacketBuffer {
 
         Ok(first_byte | second_byte | third_byte | fourth_byte)
     }
+}
 
+#[derive(Debug, PartialEq)]
+pub struct DNSPacket {
+    header: DNSHeader,
+    questions: Vec<DNSQuestion>,
+    answers: Vec<DNSRecord>,
+    authorities: Vec<DNSRecord>,
+    additional_records: Vec<DNSRecord>,
+}
+
+impl DNSPacket {
     /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
     /// header.
-    fn parse_header(&mut self) -> Result<DNSHeader, DNSPacketErr> {
-        let header = DNSHeader::parse_from_buffer(self);
+    fn parse_header(buffer: &mut DNSPacketBuffer) -> Result<DNSHeader, DNSPacketErr> {
+        let header = DNSHeader::parse_from_buffer(buffer);
         header
     }
 
     /// Parse DNS questions starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last question.
-    fn parse_questions(&mut self, num_questions: u16) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
+    fn parse_questions(
+        buffer: &mut DNSPacketBuffer,
+        num_questions: u16,
+    ) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
         let mut questions = Vec::<DNSQuestion>::new();
         for _ in 0..num_questions {
-            questions.push(DNSQuestion::parse_from_buffer(self)?);
+            questions.push(DNSQuestion::parse_from_buffer(buffer)?);
         }
         Ok(questions)
     }
 
     /// Parse DNS record starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last answer.
-    fn parse_records(&mut self, num_records: u16) -> Result<Vec<DNSRecord>, DNSPacketErr> {
+    fn parse_records(
+        buffer: &mut DNSPacketBuffer,
+        num_records: u16,
+    ) -> Result<Vec<DNSRecord>, DNSPacketErr> {
         let mut records = Vec::<DNSRecord>::new();
         for _ in 0..num_records {
-            records.push(DNSRecord::parse_from_buffer(self)?);
+            records.push(DNSRecord::parse_from_buffer(buffer)?);
         }
         Ok(records)
     }
 
     /// Parse DNS information.
-    pub fn parse_dns_packet(&mut self) -> Result<DNSPacket, DNSPacketErr> {
-        let header = self.parse_header()?;
-        let questions = self.parse_questions(header.question_count)?;
-        let answers = self.parse_records(header.answer_count)?;
-        let authorities = self.parse_records(header.authority_count)?;
-        let additional_records = self.parse_records(header.additional_count)?;
-        Ok(DNSPacket {
+    pub fn parse_dns_packet(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+        let header = Self::parse_header(buffer)?;
+        let questions = Self::parse_questions(buffer, header.question_count)?;
+        let answers = Self::parse_records(buffer, header.answer_count)?;
+        let authorities = Self::parse_records(buffer, header.authority_count)?;
+        let additional_records = Self::parse_records(buffer, header.additional_count)?;
+        Ok(Self {
             header,
             questions,
             answers,
