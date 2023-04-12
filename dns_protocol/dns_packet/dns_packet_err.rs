@@ -6,4 +6,5 @@ pub enum DNSPacketErr {
     UnknownQueryTypeErr(u16),
     NonUTF8LabelErr,
     MaxJumpsErr,
+    BuffWriteErr,
 }

@@ -19,6 +19,8 @@ impl DNSPacketBuffer {
         DNSPacketBuffer { data, pos: 0 }
     }
 
+    // NOTE: Reading methods
+
     /// Set the buffer's position pointer to a given position.
     fn seek(&mut self, pos: usize) {
         self.pos = pos;
@@ -65,6 +67,54 @@ impl DNSPacketBuffer {
         let fourth_byte = self.read_u8()? as u32;
 
         Ok(first_byte | second_byte | third_byte | fourth_byte)
+    }
+
+    // NOTE: Writing methods
+
+    /// Write byte at current position and advance position pointer.
+    fn write_u8(&mut self, val: u8) -> Result<(), DNSPacketErr> {
+        if self.pos >= 512 {
+            return Err(DNSPacketErr::EndOfBufferErr);
+        }
+
+        self.data[self.pos] = val;
+        self.pos += 1;
+
+        Ok(())
+    }
+
+    /// Write two bytes at current position and advance position pointer.
+    fn write_u16(&mut self, val: u16) -> Result<(), DNSPacketErr> {
+        if self.pos >= 512 {
+            return Err(DNSPacketErr::EndOfBufferErr);
+        }
+
+        let first_byte = (val >> 8) as u8;
+        let second_byte = (val & 0x00FF) as u8;
+
+        self.write_u8(first_byte)?;
+        self.write_u8(second_byte)?;
+
+        Ok(())
+    }
+
+    /// Write four bytes at current position and advance position pointer.
+    fn write_32(&mut self, val: u16) -> Result<(), DNSPacketErr> {
+        if self.pos >= 512 {
+            return Err(DNSPacketErr::EndOfBufferErr);
+        }
+
+        let first_byte = ((val >> 24) & 0x000000FF) as u8;
+        let second_byte = ((val >> 16) & 0x000000FF) as u8;
+        let third_byte = ((val >> 8) & 0x000000FF) as u8;
+        let fourth_byte = (val & 0x000000FF) as u8;
+
+        self.write_u8(first_byte)?;
+        self.write_u8(second_byte)?;
+        self.write_u8(third_byte)?;
+        self.write_u8(fourth_byte)?;
+
+        Ok(())
     }
 }
 
