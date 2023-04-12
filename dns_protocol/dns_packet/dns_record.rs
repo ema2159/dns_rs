@@ -5,23 +5,21 @@ use crate::dns_protocol::dns_packet::DNSPacketBuffer;
 use std::net::Ipv4Addr;
 
 #[derive(Debug, PartialEq)]
-pub struct DNSRecord {
-    pub preamble: DNSRecordPreamble,
-    pub data: DNSRecordType,
+pub enum DNSRecord {
+    A {
+        domain: String,
+        addr: Ipv4Addr,
+        ttl: u32,
+    },
 }
 
 #[derive(Debug, PartialEq)]
 pub struct DNSRecordPreamble {
-    pub label_sequence: String,    // Variable length
+    pub domain: String,    // Variable length
     pub record_type: DNSQueryType, // 2 bytes
     pub class: u16,                // 2 bytes
     pub ttl: u32,                  // 4 bytes
     pub len: u16,                  // 2 bytes
-}
-
-#[derive(Debug, PartialEq)]
-pub enum DNSRecordType {
-    A(Ipv4Addr),
 }
 
 #[derive(Debug, PartialEq)]
@@ -39,8 +37,12 @@ impl DNSQueryType {
 }
 
 impl DNSRecord {
-    fn parse_type_a(buffer: &mut DNSPacketBuffer) -> Result<DNSRecordType, DNSPacketErr> {
-        Ok(DNSRecordType::A(Ipv4Addr::from(buffer.read_u32()?)))
+    fn parse_type_a(buffer: &mut DNSPacketBuffer, preamble: DNSRecordPreamble) -> Result<DNSRecord, DNSPacketErr> {
+        Ok(DNSRecord::A{
+            domain: preamble.domain,
+            addr: Ipv4Addr::from(buffer.read_u32()?),
+            ttl: preamble.ttl
+        })
     }
 
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
@@ -49,15 +51,16 @@ impl DNSRecord {
         }
 
         let preamble = DNSRecordPreamble {
-            label_sequence: DNSDomain::parse_domain(buffer, 0)?,
+            domain: DNSDomain::parse_domain(buffer, 0)?,
             record_type: DNSQueryType::from_num(buffer.read_u16()?)?,
             class: buffer.read_u16()?,
             ttl: buffer.read_u32()?,
             len: buffer.read_u16()?,
         };
-        let data = match preamble.record_type {
-            DNSQueryType::A => Ok(DNSRecord::parse_type_a(buffer)?),
+        let record = match preamble.record_type {
+            DNSQueryType::A => Ok(DNSRecord::parse_type_a(buffer, preamble)?),
         }?;
-        Ok(DNSRecord { preamble, data })
+
+        Ok(record)
     }
 }

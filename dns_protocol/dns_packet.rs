@@ -221,15 +221,10 @@ mod tests {
             class: 0x01,
         }];
 
-        let expected_answers = vec![DNSRecord {
-            preamble: DNSRecordPreamble {
-                label_sequence: "www.google.com".to_string(),
-                record_type: DNSQueryType::A,
-                class: 0x01,
-                ttl: 293,
-                len: 4,
-            },
-            data: DNSRecordType::A(Ipv4Addr::new(216, 58, 211, 142)),
+        let expected_answers = vec![DNSRecord::A {
+            domain: "www.google.com".to_string(),
+            addr: Ipv4Addr::new(216, 58, 211, 142),
+            ttl: 293,
         }];
 
         let expected_authorities = Vec::<DNSRecord>::new();
