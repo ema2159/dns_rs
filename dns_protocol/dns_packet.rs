@@ -24,6 +24,10 @@ impl DNSPacketBuffer {
         self.pos = pos;
     }
 
+    fn step(&mut self, steps: usize) {
+        self.pos += steps;
+    }
+
     /// Read byte at current position. Don't move position pointer.
     fn get_u8(&self) -> Result<u8, DNSPacketErr> {
         if self.pos >= 512 {

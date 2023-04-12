@@ -55,11 +55,17 @@ impl DNSRecord {
         })
     }
 
-    fn parse_type_unknown(preamble: DNSRecordPreamble) -> Result<DNSRecord, DNSPacketErr> {
+    fn parse_type_unknown(
+        buffer: &mut DNSPacketBuffer,
+        preamble: DNSRecordPreamble,
+    ) -> Result<DNSRecord, DNSPacketErr> {
         let DNSQueryType::UNKNOWN(record_type_num) = preamble.record_type
             else {
                 unreachable!()
             };
+        // Skip reading package
+        buffer.step(preamble.len as usize);
+
         Ok(DNSRecord::UNKNOWN {
             domain: preamble.domain,
             record_type: record_type_num,
@@ -82,7 +88,7 @@ impl DNSRecord {
         };
         let record = match preamble.record_type {
             DNSQueryType::A => Ok(DNSRecord::parse_type_a(buffer, preamble)?),
-            DNSQueryType::UNKNOWN(_) => Ok(DNSRecord::parse_type_unknown(preamble)?),
+            DNSQueryType::UNKNOWN(_) => Ok(DNSRecord::parse_type_unknown(buffer, preamble)?),
         }?;
 
         Ok(record)
