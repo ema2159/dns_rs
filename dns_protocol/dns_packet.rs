@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn test_answer_packet() {
+    fn test_answer_packet_a_record() {
         let mut dns_packet_buffer: [u8; 512] = [0; 512];
         let dns_packet_data: [u8; 48] = [
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
@@ -224,6 +224,67 @@ mod tests {
         let expected_answers = vec![DNSRecord::A {
             domain: "www.google.com".to_string(),
             addr: Ipv4Addr::new(216, 58, 211, 142),
+            ttl: 293,
+        }];
+
+        let expected_authorities = Vec::<DNSRecord>::new();
+        let expected_additional_records = Vec::<DNSRecord>::new();
+
+        let expected_packet = DNSPacket {
+            header: expected_header,
+            questions: expected_questions,
+            answers: expected_answers,
+            authorities: expected_authorities,
+            additional_records: expected_additional_records,
+        };
+
+        assert_eq!(parsed_dns_packet.header, expected_packet.header);
+        assert_eq!(parsed_dns_packet.questions, expected_packet.questions);
+        assert_eq!(parsed_dns_packet.answers, expected_packet.answers);
+    }
+
+    #[test]
+    fn test_answer_packet_unknown_record() {
+        let mut dns_packet_buffer: [u8; 512] = [0; 512];
+        let dns_packet_data: [u8; 48] = [
+            0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
+            0x77, 0x77, 0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
+            0x00, 0x01, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0xFF, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25,
+            0x00, 0x04, 0xd8, 0x3a, 0xd3, 0x8e,
+        ];
+
+        dns_packet_buffer[0..48].clone_from_slice(&dns_packet_data);
+
+        let parsed_dns_packet = DNSPacketBuffer::new(dns_packet_buffer)
+            .parse_dns_packet()
+            .unwrap();
+
+        let expected_header = DNSHeader {
+            id: 0x862a,
+            query_response: true,
+            opcode: 0,
+            authoritative_answer: false,
+            truncated_message: false,
+            recursion_desired: true,
+            recursion_available: true,
+            reserved: 0,
+            response_code: DNSResponseCode::NOERROR,
+            question_count: 1,
+            answer_count: 1,
+            authority_count: 0,
+            additional_count: 0,
+        };
+
+        let expected_questions = vec![DNSQuestion {
+            label_sequence: "www.google.com".to_string(),
+            record_type: 0x01,
+            class: 0x01,
+        }];
+
+        let expected_answers = vec![DNSRecord::UNKNOWN {
+            domain: "www.google.com".to_string(),
+            record_type: 255,
+            data_len: 4,
             ttl: 293,
         }];
 
