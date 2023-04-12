@@ -131,19 +131,17 @@ mod tests {
 
     #[test]
     fn test_query_packet() {
-        let mut dns_packet_buffer: [u8; 512] = [0; 512];
-        let dns_packet_data: [u8; 51] = [
+        let mut dns_packet_data: [u8; 512] = [0; 512];
+
+        dns_packet_data[0..51].clone_from_slice(&[
             0x86, 0x2a, 0x01, 0x20, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
             0x77, 0x77, 0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
             0x00, 0x01, 0x00, 0x01, 0x03, 0x77, 0x77, 0x77, 0x05, 0x79, 0x61, 0x68, 0x6F, 0x6F,
             0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00, 0x01, 0x00, 0x00,
-        ];
+        ]);
 
-        dns_packet_buffer[0..51].clone_from_slice(&dns_packet_data);
-
-        let parsed_dns_packet = DNSPacketBuffer::new(dns_packet_buffer)
-            .parse_dns_packet()
-            .unwrap();
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {
             id: 0x862a,
@@ -193,19 +191,17 @@ mod tests {
 
     #[test]
     fn test_answer_packet_a_record() {
-        let mut dns_packet_buffer: [u8; 512] = [0; 512];
-        let dns_packet_data: [u8; 48] = [
+        let mut dns_packet_data: [u8; 512] = [0; 512];
+
+        dns_packet_data[0..48].clone_from_slice(&[
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
             0x77, 0x77, 0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
             0x00, 0x01, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25,
             0x00, 0x04, 0xd8, 0x3a, 0xd3, 0x8e,
-        ];
+        ]);
 
-        dns_packet_buffer[0..48].clone_from_slice(&dns_packet_data);
-
-        let parsed_dns_packet = DNSPacketBuffer::new(dns_packet_buffer)
-            .parse_dns_packet()
-            .unwrap();
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {
             id: 0x862a,
@@ -253,19 +249,17 @@ mod tests {
 
     #[test]
     fn test_answer_packet_unknown_record() {
-        let mut dns_packet_buffer: [u8; 512] = [0; 512];
-        let dns_packet_data: [u8; 48] = [
+        let mut dns_packet_data: [u8; 512] = [0; 512];
+
+        dns_packet_data[0..48].clone_from_slice(&[
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x03, 0x77,
             0x77, 0x77, 0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
             0x00, 0x01, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0xFF, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25,
             0x00, 0x04, 0xd8, 0x3a, 0xd3, 0x8e,
-        ];
+        ]);
 
-        dns_packet_buffer[0..48].clone_from_slice(&dns_packet_data);
-
-        let parsed_dns_packet = DNSPacketBuffer::new(dns_packet_buffer)
-            .parse_dns_packet()
-            .unwrap();
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {
             id: 0x862a,
