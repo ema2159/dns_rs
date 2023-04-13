@@ -52,7 +52,7 @@ pub struct DNSHeader {
 
 impl DNSHeader {
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
-        if buffer.pos != 0 {
+        if buffer.get_pos() != 0 {
             return Err(DNSPacketErr::BadPointerPositionErr);
         }
 

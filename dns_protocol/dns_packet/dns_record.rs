@@ -75,7 +75,7 @@ impl DNSRecord {
     }
 
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
-        if buffer.pos < 12 {
+        if buffer.get_pos() < 12 {
             return Err(DNSPacketErr::BadPointerPositionErr);
         }
 

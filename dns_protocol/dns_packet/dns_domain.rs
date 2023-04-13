@@ -21,7 +21,7 @@ impl DNSDomain {
             // If two MSBs are 1, mask with 0xC000 and jump to that position to reuse a previous label,
             // then jump back
             if 0b1100_0000 & jump_or_len_byte == 0b1100_0000 {
-                let next_pos = buffer.pos + 2;
+                let next_pos = buffer.get_pos() + 2;
                 let jump_pos = buffer.read_u16()? ^ 0b1100_0000_0000_0000;
                 buffer.seek(jump_pos as usize);
                 let reused_labels = DNSDomain::parse_domain(buffer, jump + 1)?;
