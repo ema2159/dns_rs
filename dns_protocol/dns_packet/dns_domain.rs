@@ -1,5 +1,5 @@
-use crate::dns_protocol::dns_packet::dns_packet_err::DNSPacketErr;
-use crate::dns_protocol::dns_packet::DNSPacketBuffer;
+use super::DNSPacketBuffer;
+use super::DNSPacketErr;
 
 pub struct DNSDomain;
 

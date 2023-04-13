@@ -4,12 +4,12 @@ mod dns_packet_buf;
 mod dns_packet_err;
 mod dns_question;
 mod dns_record;
+use dns_domain::*;
 use dns_header::*;
 use dns_packet_buf::*;
 use dns_packet_err::*;
 use dns_question::*;
 use dns_record::*;
-
 
 #[derive(Debug, PartialEq)]
 pub struct DNSPacket {

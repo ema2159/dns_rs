@@ -1,6 +1,6 @@
-use crate::dns_protocol::dns_packet::dns_domain::DNSDomain;
-use crate::dns_protocol::dns_packet::dns_packet_err::DNSPacketErr;
-use crate::dns_protocol::dns_packet::DNSPacketBuffer;
+use super::DNSDomain;
+use super::DNSPacketBuffer;
+use super::DNSPacketErr;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSQuestion {
