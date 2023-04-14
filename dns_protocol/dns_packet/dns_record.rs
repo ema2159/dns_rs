@@ -68,7 +68,7 @@ impl DNSRecord {
 
         let preamble = DNSRecordPreamble {
             domain: DNSDomain::parse_domain(buffer, 0)?,
-            record_type: DNSQueryType::from_num(buffer.read_u16()?)?,
+            record_type: DNSQueryType::from_num(buffer.read_u16()?),
             class: buffer.read_u16()?,
             ttl: buffer.read_u32()?,
             len: buffer.read_u16()?,

@@ -7,10 +7,10 @@ pub enum DNSQueryType {
 }
 
 impl DNSQueryType {
-    pub fn from_num(code_num: u16) -> Result<DNSQueryType, DNSPacketErr> {
+    pub fn from_num(code_num: u16) -> DNSQueryType {
         match code_num {
-            1 => Ok(DNSQueryType::A),
-            _ => Ok(DNSQueryType::UNKNOWN(code_num)),
+            1 => DNSQueryType::A,
+            _ => DNSQueryType::UNKNOWN(code_num),
         }
     }
 }
