@@ -1,5 +1,6 @@
 use super::DNSPacketErr;
 
+#[derive(Debug, PartialEq)]
 pub struct DNSPacketBuffer {
     data: [u8; 512],
     pos: usize,
