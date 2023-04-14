@@ -96,7 +96,7 @@ impl DNSPacketBuffer {
     }
 
     /// Write four bytes at current position and advance position pointer.
-    pub fn write_32(&mut self, val: u32) -> Result<(), DNSPacketErr> {
+    pub fn write_u32(&mut self, val: u32) -> Result<(), DNSPacketErr> {
         if self.pos >= 512 {
             return Err(DNSPacketErr::EndOfBufferErr);
         }
