@@ -2,12 +2,13 @@ use super::DNSDomain;
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 use super::HEADER_SIZE;
+use super::DNSQueryType;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSQuestion {
     pub label_sequence: String, // Variable length
-    pub record_type: u16,       // 2 bytes
-    pub class: u16,             // 2 bytes
+    pub record_type: DNSQueryType, // 2 bytes
+    pub class: u16, // 2 bytes
 }
 
 impl DNSQuestion {
@@ -17,7 +18,7 @@ impl DNSQuestion {
         }
 
         let label_sequence = DNSDomain::parse_domain(buffer, 0)?;
-        let record_type = buffer.read_u16()?;
+        let record_type = DNSQueryType::from_num(buffer.read_u16()?);
         let class = buffer.read_u16()?;
         Ok(DNSQuestion {
             label_sequence,

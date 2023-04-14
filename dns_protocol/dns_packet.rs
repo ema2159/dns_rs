@@ -115,12 +115,12 @@ mod tests {
         let expected_questions = vec![
             DNSQuestion {
                 label_sequence: "www.google.com".to_string(),
-                record_type: 0x01,
+                record_type: DNSQueryType::A,
                 class: 0x01,
             },
             DNSQuestion {
                 label_sequence: "www.yahoo.com".to_string(),
-                record_type: 0x01,
+                record_type: DNSQueryType::A,
                 class: 0x00,
             },
         ];
@@ -175,7 +175,7 @@ mod tests {
 
         let expected_questions = vec![DNSQuestion {
             label_sequence: "www.google.com".to_string(),
-            record_type: 0x01,
+            record_type: DNSQueryType::A,
             class: 0x01,
         }];
 
@@ -235,7 +235,7 @@ mod tests {
 
         let expected_questions = vec![DNSQuestion {
             label_sequence: "www.google.com".to_string(),
-            record_type: 0x01,
+            record_type: DNSQueryType::A,
             class: 0x01,
         }];
 
