@@ -92,3 +92,56 @@ impl DNSHeader {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_header() {
+        let dns_packet_init = [
+            0x55, 0x44, 0x7E, 0xF9, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x91,
+        ];
+        let mut dns_packet_data: [u8; 512] = [0; 512];
+
+        dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
+
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let parsed_dns_header = DNSHeader::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+
+        let expected_header = DNSHeader {
+            id: 0x5544,
+            query_response: false,
+            opcode: 15,
+            authoritative_answer: true,
+            truncated_message: true,
+            recursion_desired: false,
+            recursion_available: true,
+            reserved: 7,
+            response_code: DNSResponseCode::NOTZONE,
+            question_count: 0xABCD,
+            answer_count: 0xEF12,
+            authority_count: 0x3456,
+            additional_count: 0x7891,
+        };
+
+        assert_eq!(parsed_dns_header, expected_header);
+    }
+
+    #[test]
+    fn test_wrong_rcode() {
+        let dns_packet_init = [
+            0x55, 0x44, 0x7E, 0xFF, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x91,
+        ];
+        let mut dns_packet_data: [u8; 512] = [0; 512];
+
+        dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
+
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let parsed_dns_header = DNSHeader::parse_from_buffer(&mut dns_packet_buffer);
+
+        let expected = Err(DNSPacketErr::UnknownResponseCodeErr(0xF));
+
+        assert_eq!(parsed_dns_header, expected);
+    }
+}
