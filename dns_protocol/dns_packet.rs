@@ -4,12 +4,14 @@ mod dns_packet_buf;
 mod dns_packet_err;
 mod dns_question;
 mod dns_record;
+mod dns_qtype;
 use dns_domain::*;
 use dns_header::*;
 use dns_packet_buf::*;
 use dns_packet_err::*;
 use dns_question::*;
 use dns_record::*;
+use dns_qtype::*;
 
 const PACKET_SIZE: usize = 512;
 const HEADER_SIZE: usize = 12;

@@ -1,6 +1,7 @@
 use super::DNSDomain;
-use super::DNSPacketErr;
 use super::DNSPacketBuffer;
+use super::DNSPacketErr;
+use super::DNSQueryType;
 use super::HEADER_SIZE;
 
 use std::net::Ipv4Addr;
@@ -27,21 +28,6 @@ pub struct DNSRecordPreamble {
     pub class: u16,                // 2 bytes
     pub ttl: u32,                  // 4 bytes
     pub len: u16,                  // 2 bytes
-}
-
-#[derive(Debug, PartialEq)]
-pub enum DNSQueryType {
-    A,
-    UNKNOWN(u16),
-}
-
-impl DNSQueryType {
-    fn from_num(code_num: u16) -> Result<DNSQueryType, DNSPacketErr> {
-        match code_num {
-            1 => Ok(DNSQueryType::A),
-            _ => Ok(DNSQueryType::UNKNOWN(code_num)),
-        }
-    }
 }
 
 impl DNSRecord {
