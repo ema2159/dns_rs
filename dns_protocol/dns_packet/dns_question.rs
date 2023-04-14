@@ -1,6 +1,7 @@
 use super::DNSDomain;
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
+use super::HEADER_SIZE;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSQuestion {
@@ -11,7 +12,7 @@ pub struct DNSQuestion {
 
 impl DNSQuestion {
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
-        if buffer.get_pos() < 12 {
+        if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPositionErr);
         }
 

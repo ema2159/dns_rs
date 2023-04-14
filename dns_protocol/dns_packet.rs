@@ -11,6 +11,9 @@ use dns_packet_err::*;
 use dns_question::*;
 use dns_record::*;
 
+const PACKET_SIZE: usize = 512;
+const HEADER_SIZE: usize = 12;
+
 #[derive(Debug, PartialEq)]
 pub struct DNSPacket {
     header: DNSHeader,
@@ -84,7 +87,7 @@ mod tests {
             0x00, 0x01, 0x00, 0x01, 0x03, 0x77, 0x77, 0x77, 0x05, 0x79, 0x61, 0x68, 0x6F, 0x6F,
             0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00, 0x01, 0x00, 0x00,
         ];
-        let mut dns_packet_data: [u8; 512] = [0; 512];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
         dns_packet_data[0..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
 
@@ -145,7 +148,7 @@ mod tests {
             0x00, 0x01, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25,
             0x00, 0x04, 0xd8, 0x3a, 0xd3, 0x8e,
         ];
-        let mut dns_packet_data: [u8; 512] = [0; 512];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
         dns_packet_data[0..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
 
@@ -205,7 +208,7 @@ mod tests {
             0x00, 0x04, 0xd8, 0x3a, 0xd3, 0x8e, 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
             0x01, 0x25, 0x00, 0x04, 0xd8, 0x3a, 0xd3, 0x8e,
         ];
-        let mut dns_packet_data: [u8; 512] = [0; 512];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
         dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
 

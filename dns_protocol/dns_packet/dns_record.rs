@@ -1,6 +1,7 @@
 use crate::dns_protocol::dns_packet::dns_domain::DNSDomain;
 use crate::dns_protocol::dns_packet::dns_packet_err::DNSPacketErr;
 use crate::dns_protocol::dns_packet::DNSPacketBuffer;
+use super::HEADER_SIZE;
 
 use std::net::Ipv4Addr;
 
@@ -75,7 +76,7 @@ impl DNSRecord {
     }
 
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
-        if buffer.get_pos() < 12 {
+        if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPositionErr);
         }
 
