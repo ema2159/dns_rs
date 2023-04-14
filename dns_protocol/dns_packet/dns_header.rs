@@ -181,7 +181,7 @@ mod tests {
             id: 0x5544,
             query_response: false,
             opcode: 15,
-            authoritative_answer: true,
+            authoritative_answer: false,
             truncated_message: true,
             recursion_desired: false,
             recursion_available: true,
@@ -199,7 +199,7 @@ mod tests {
 
         // Expected
         let dns_packet_init = [
-            0x55, 0x44, 0x7E, 0xF9, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x91,
+            0x55, 0x44, 0x7A, 0xF9, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x91,
         ];
         let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
