@@ -14,7 +14,7 @@ pub struct DNSQuestion {
 impl DNSQuestion {
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPositionErr);
+            return Err(DNSPacketErr::BadPointerPosition);
         }
 
         let label_sequence = DNSDomain::parse_domain(buffer, 0)?;

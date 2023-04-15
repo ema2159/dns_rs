@@ -29,8 +29,7 @@ impl DNSPacket {
     /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
     /// header.
     fn parse_header(buffer: &mut DNSPacketBuffer) -> Result<DNSHeader, DNSPacketErr> {
-        let header = DNSHeader::parse_from_buffer(buffer);
-        header
+        DNSHeader::parse_from_buffer(buffer)
     }
 
     /// Parse DNS questions starting from the current buffer pointer's position. Move pointer's
@@ -105,7 +104,7 @@ mod tests {
             recursion_desired: true,
             recursion_available: false,
             reserved: 2,
-            response_code: DNSResponseCode::NOERROR,
+            response_code: DNSResponseCode::NoError,
             question_count: 2,
             answer_count: 0,
             authority_count: 0,
@@ -166,7 +165,7 @@ mod tests {
             recursion_desired: true,
             recursion_available: true,
             reserved: 0,
-            response_code: DNSResponseCode::NOERROR,
+            response_code: DNSResponseCode::NoError,
             question_count: 1,
             answer_count: 1,
             authority_count: 0,
@@ -226,7 +225,7 @@ mod tests {
             recursion_desired: true,
             recursion_available: true,
             reserved: 0,
-            response_code: DNSResponseCode::NOERROR,
+            response_code: DNSResponseCode::NoError,
             question_count: 1,
             answer_count: 2,
             authority_count: 0,
@@ -240,7 +239,7 @@ mod tests {
         }];
 
         let expected_answers = vec![
-            DNSRecord::UNKNOWN {
+            DNSRecord::Unknown {
                 domain: "www.google.com".to_string(),
                 record_type: 255,
                 data_len: 4,

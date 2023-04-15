@@ -9,7 +9,7 @@ impl DNSDomain {
     pub fn parse_domain(buffer: &mut DNSPacketBuffer, jump: u8) -> Result<String, DNSPacketErr> {
         const MAX_JUMPS: u8 = 5;
         if jump == MAX_JUMPS {
-            return Err(DNSPacketErr::MaxJumpsErr);
+            return Err(DNSPacketErr::MaxJumps);
         }
 
         let mut labels_buf = Vec::<String>::new();
@@ -46,8 +46,7 @@ impl DNSDomain {
             }
 
             // [b'g', b'o', b'o', b'g', b'l', b'e'] -> "google"
-            let label = (String::from_utf8(label_buf)
-                .or_else(|_| Err(DNSPacketErr::NonUTF8LabelErr))?)
+            let label = (String::from_utf8(label_buf).map_err(|_| DNSPacketErr::NonUTF8Label)?)
             .to_lowercase();
 
             // ["www"].push("google")

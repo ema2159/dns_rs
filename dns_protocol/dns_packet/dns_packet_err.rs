@@ -1,10 +1,10 @@
 #[derive(Debug, PartialEq)]
 pub enum DNSPacketErr {
-    EndOfBufferErr,
-    BadPointerPositionErr,
-    UnknownResponseCodeErr(u8),
-    UnknownQueryTypeErr(u16),
-    NonUTF8LabelErr,
-    MaxJumpsErr,
-    BuffWriteErr,
+    EndOfBuffer,
+    BadPointerPosition,
+    UnknownResponseCode(u8),
+    UnknownQueryType(u16),
+    NonUTF8Label,
+    MaxJumps,
+    BuffWrite,
 }

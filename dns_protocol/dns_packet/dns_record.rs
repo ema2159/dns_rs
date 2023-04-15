@@ -13,7 +13,7 @@ pub enum DNSRecord {
         addr: Ipv4Addr,
         ttl: u32,
     },
-    UNKNOWN {
+    Unknown {
         domain: String,
         record_type: u16,
         data_len: u16,
@@ -46,14 +46,14 @@ impl DNSRecord {
         buffer: &mut DNSPacketBuffer,
         preamble: DNSRecordPreamble,
     ) -> Result<DNSRecord, DNSPacketErr> {
-        let DNSQueryType::UNKNOWN(record_type_num) = preamble.record_type
+        let DNSQueryType::Unknown(record_type_num) = preamble.record_type
             else {
                 unreachable!()
             };
         // Skip reading package
         buffer.step(preamble.len as usize);
 
-        Ok(DNSRecord::UNKNOWN {
+        Ok(DNSRecord::Unknown {
             domain: preamble.domain,
             record_type: record_type_num,
             data_len: preamble.len,
@@ -63,7 +63,7 @@ impl DNSRecord {
 
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPositionErr);
+            return Err(DNSPacketErr::BadPointerPosition);
         }
 
         let preamble = DNSRecordPreamble {
@@ -75,7 +75,7 @@ impl DNSRecord {
         };
         let record = match preamble.record_type {
             DNSQueryType::A => Ok(DNSRecord::parse_type_a(buffer, preamble)?),
-            DNSQueryType::UNKNOWN(_) => Ok(DNSRecord::parse_type_unknown(buffer, preamble)?),
+            DNSQueryType::Unknown(_) => Ok(DNSRecord::parse_type_unknown(buffer, preamble)?),
         }?;
 
         Ok(record)
