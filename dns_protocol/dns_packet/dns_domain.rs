@@ -69,7 +69,9 @@ impl DNSDomain {
     }
 
     pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        const MAX_LABEL_SIZE: usize = 63;
         for label in self.split('.') {
+            if label.len() > MAX_LABEL_SIZE {
                 return Err(DNSPacketErr::LabelTooLarge);
             }
             buffer.write_u8(label.len() as u8)?;
