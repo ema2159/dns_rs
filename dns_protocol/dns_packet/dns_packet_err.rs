@@ -7,4 +7,5 @@ pub enum DNSPacketErr {
     NonUTF8Label,
     MaxJumps,
     BuffWrite,
+    LabelTooLarge,
 }
