@@ -40,3 +40,73 @@ impl DNSQuestion {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_header() {
+        let dns_packet_questions = [
+            0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01,
+            0x00, 0x01, 0x05, 0x79, 0x61, 0x68, 0x6F, 0x6F, 0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00,
+            0x01, 0x00, 0x00,
+        ];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+
+        dns_packet_data[HEADER_SIZE..HEADER_SIZE + dns_packet_questions.len()]
+            .clone_from_slice(&dns_packet_questions);
+
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        dns_packet_buffer.seek(HEADER_SIZE);
+
+        // Expected
+        let parsed_question0 = DNSQuestion::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_question1 = DNSQuestion::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+
+        let expected_questions = vec![
+            DNSQuestion {
+                domain: DNSDomain("google.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x01,
+            },
+            DNSQuestion {
+                domain: DNSDomain("yahoo.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x00,
+            },
+        ];
+
+        assert_eq!(parsed_question0, expected_questions[0]);
+        assert_eq!(parsed_question1, expected_questions[1]);
+    }
+
+    #[test]
+    fn test_write_to_buffer() {
+        let question = DNSQuestion {
+            domain: DNSDomain("google.com".to_string()),
+            record_type: DNSQueryType::A,
+            class: 0x01,
+        };
+
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        buffer.seek(HEADER_SIZE);
+
+        question.write_to_buffer(&mut buffer).unwrap();
+
+        // Expected
+        let dns_packet_question = [
+            0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01,
+            0x00, 0x01,
+        ];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+
+        dns_packet_data[HEADER_SIZE..HEADER_SIZE + dns_packet_question.len()]
+            .clone_from_slice(&dns_packet_question);
+
+        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        expected_buffer.seek(HEADER_SIZE + dns_packet_question.len());
+
+        assert_eq!(buffer, expected_buffer)
+    }
+}
