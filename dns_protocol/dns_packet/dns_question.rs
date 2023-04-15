@@ -6,9 +6,9 @@ use super::DNSQueryType;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSQuestion {
-    pub label_sequence: String, // Variable length
+    pub label_sequence: DNSDomain, // Variable length
     pub record_type: DNSQueryType, // 2 bytes
-    pub class: u16, // 2 bytes
+    pub class: u16,                // 2 bytes
 }
 
 impl DNSQuestion {

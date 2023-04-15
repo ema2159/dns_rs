@@ -9,12 +9,12 @@ use std::net::Ipv4Addr;
 #[derive(Debug, PartialEq)]
 pub enum DNSRecord {
     A {
-        domain: String,
+        domain: DNSDomain,
         addr: Ipv4Addr,
         ttl: u32,
     },
     Unknown {
-        domain: String,
+        domain: DNSDomain,
         record_type: u16,
         data_len: u16,
         ttl: u32,
@@ -23,7 +23,7 @@ pub enum DNSRecord {
 
 #[derive(Debug, PartialEq)]
 pub struct DNSRecordPreamble {
-    pub domain: String,            // Variable length
+    pub domain: DNSDomain,         // Variable length
     pub record_type: DNSQueryType, // 2 bytes
     pub class: u16,                // 2 bytes
     pub ttl: u32,                  // 4 bytes

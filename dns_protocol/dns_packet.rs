@@ -2,16 +2,16 @@ mod dns_domain;
 mod dns_header;
 mod dns_packet_buf;
 mod dns_packet_err;
+mod dns_qtype;
 mod dns_question;
 mod dns_record;
-mod dns_qtype;
 use dns_domain::*;
 use dns_header::*;
 use dns_packet_buf::*;
 use dns_packet_err::*;
+use dns_qtype::*;
 use dns_question::*;
 use dns_record::*;
-use dns_qtype::*;
 
 const PACKET_SIZE: usize = 512;
 const HEADER_SIZE: usize = 12;
@@ -113,12 +113,12 @@ mod tests {
 
         let expected_questions = vec![
             DNSQuestion {
-                label_sequence: "www.google.com".to_string(),
+                label_sequence: DNSDomain("www.google.com".to_string()),
                 record_type: DNSQueryType::A,
                 class: 0x01,
             },
             DNSQuestion {
-                label_sequence: "www.yahoo.com".to_string(),
+                label_sequence: DNSDomain("www.yahoo.com".to_string()),
                 record_type: DNSQueryType::A,
                 class: 0x00,
             },
@@ -173,13 +173,13 @@ mod tests {
         };
 
         let expected_questions = vec![DNSQuestion {
-            label_sequence: "www.google.com".to_string(),
+            label_sequence: DNSDomain("www.google.com".to_string()),
             record_type: DNSQueryType::A,
             class: 0x01,
         }];
 
         let expected_answers = vec![DNSRecord::A {
-            domain: "www.google.com".to_string(),
+            domain: DNSDomain("www.google.com".to_string()),
             addr: Ipv4Addr::new(216, 58, 211, 142),
             ttl: 293,
         }];
@@ -233,20 +233,20 @@ mod tests {
         };
 
         let expected_questions = vec![DNSQuestion {
-            label_sequence: "www.google.com".to_string(),
+            label_sequence: DNSDomain("www.google.com".to_string()),
             record_type: DNSQueryType::A,
             class: 0x01,
         }];
 
         let expected_answers = vec![
             DNSRecord::Unknown {
-                domain: "www.google.com".to_string(),
+                domain: DNSDomain("www.google.com".to_string()),
                 record_type: 255,
                 data_len: 4,
                 ttl: 293,
             },
             DNSRecord::A {
-                domain: "www.google.com".to_string(),
+                domain: DNSDomain("www.google.com".to_string()),
                 addr: Ipv4Addr::new(216, 58, 211, 142),
                 ttl: 293,
             },
