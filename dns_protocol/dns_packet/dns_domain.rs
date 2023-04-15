@@ -64,11 +64,11 @@ impl DNSDomain {
             let label = (String::from_utf8(label_buf).map_err(|_| DNSPacketErr::NonUTF8Label)?)
                 .to_lowercase();
 
-            // ["www"].push("google")
+            // ["google"].push("com")
             labels_buf.push(label);
         }
 
-        // ["www", "google", "com"] -> "www.google.com"
+        // [google", "com"] -> "google.com"
         let label_sequence = labels_buf.join(".");
 
         Ok(DNSDomain(label_sequence))
