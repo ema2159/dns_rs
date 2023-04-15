@@ -73,4 +73,17 @@ impl DNSDomain {
 
         Ok(DNSDomain(label_sequence))
     }
+
+    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        for label in self.to_string().split('.') {
+            // TODO: Deal with overly long domain
+            // if domain_string.len() >
+            buffer.write_u8(label.len() as u8)?;
+            for c in label.chars() {
+                buffer.write_u8(c as u8)?;
+            }
+        }
+        buffer.write_u8(0x00)?;
+        Ok(())
+    }
 }

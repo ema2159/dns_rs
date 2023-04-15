@@ -11,4 +11,11 @@ impl DNSQueryType {
             _ => DNSQueryType::Unknown(code_num),
         }
     }
+
+    pub fn to_num(&self) -> u16 {
+        match self {
+            DNSQueryType::A => 1,
+            DNSQueryType::Unknown(code) => *code,
+        }
+    }
 }
