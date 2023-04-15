@@ -34,7 +34,7 @@ impl DNSDomain {
                 let jump_pos = buffer.read_u16()? ^ 0b1100_0000_0000_0000;
                 buffer.seek(jump_pos as usize);
                 let reused_labels = DNSDomain::parse_domain(buffer, jump + 1)?;
-                labels_buf.push(reused_labels.to_string());
+                labels_buf.push(reused_labels.to_owned());
                 buffer.seek(next_pos);
                 break;
             }
@@ -69,8 +69,7 @@ impl DNSDomain {
     }
 
     pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
-        for label in self.to_string().split('.') {
-            if label.len() > 63 {
+        for label in self.split('.') {
                 return Err(DNSPacketErr::LabelTooLarge);
             }
             buffer.write_u8(label.len() as u8)?;
