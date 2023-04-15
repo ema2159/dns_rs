@@ -12,12 +12,6 @@ impl core::ops::Deref for DNSDomain {
     }
 }
 
-impl core::ops::DerefMut for DNSDomain {
-    fn deref_mut(&'_ mut self) -> &'_ mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl DNSDomain {
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last label.
