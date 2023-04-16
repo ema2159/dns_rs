@@ -60,7 +60,6 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        // Expected
         let parsed_question0 = DNSQuestion::parse_from_buffer(&mut dns_packet_buffer).unwrap();
         let parsed_question1 = DNSQuestion::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 

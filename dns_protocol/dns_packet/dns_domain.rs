@@ -91,14 +91,36 @@ mod tests {
 
         let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
-        dns_packet_data[..domain_bytes.len()]
-            .clone_from_slice(&domain_bytes);
+        dns_packet_data[..domain_bytes.len()].clone_from_slice(&domain_bytes);
         let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
 
-        // Expected
         let parsed_domain = DNSDomain::parse_domain(&mut dns_packet_buffer, 0).unwrap();
 
         let expected_domain = DNSDomain("google.com".to_string());
         assert_eq!(parsed_domain, expected_domain);
+    }
+
+    #[test]
+    fn test_jump_err() {
+        let domain_bytes = [
+            0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01,
+            0x00, 0x01, 0xc0, 0x10, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25, 0x00, 0x04,
+            0xd8, 0x3a, 0xd3, 0x8e,
+        ];
+
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+
+        dns_packet_data[..domain_bytes.len()].clone_from_slice(&domain_bytes);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+
+        let parsed_domain1 = DNSDomain::parse_domain(&mut dns_packet_buffer, 0);
+        dns_packet_buffer.step(4); // Skip rest of the record information. Jump to next domain
+        let parsed_domain2 = DNSDomain::parse_domain(&mut dns_packet_buffer, 0);
+
+        let expected_domain1 = Ok(DNSDomain("google.com".to_string()));
+        let expected_domain2 = Err(DNSPacketErr::MaxJumps);
+
+        assert_eq!(parsed_domain1, expected_domain1);
+        assert_eq!(parsed_domain2, expected_domain2);
     }
 }
