@@ -1,5 +1,7 @@
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
+#[cfg(test)]
+use super::{HEADER_SIZE, PACKET_SIZE};
 
 #[derive(Debug, PartialEq)]
 pub struct DNSDomain(pub String);
@@ -75,5 +77,28 @@ impl DNSDomain {
         }
         buffer.write_u8(0x00)?;
         Ok(())
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_domain() {
+        let domain_bytes = [
+            0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
+        ];
+
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+
+        dns_packet_data[..domain_bytes.len()]
+            .clone_from_slice(&domain_bytes);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+
+        // Expected
+        let parsed_domain = DNSDomain::parse_domain(&mut dns_packet_buffer, 0).unwrap();
+
+        let expected_domain = DNSDomain("google.com".to_string());
+        assert_eq!(parsed_domain, expected_domain);
     }
 }
