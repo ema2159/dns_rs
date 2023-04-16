@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use super::DNSPacketErr;
 use super::PACKET_SIZE;
 
@@ -5,12 +7,17 @@ use super::PACKET_SIZE;
 pub struct DNSPacketBuffer {
     data: [u8; PACKET_SIZE],
     pos: usize,
+    labels_lookup: BTreeMap<String, u16>,
 }
 
 impl DNSPacketBuffer {
     /// Initializes DNS packet buffer with the given data and its position pointer set to 0.
     pub fn new(data: [u8; PACKET_SIZE]) -> Self {
-        DNSPacketBuffer { data, pos: 0 }
+        DNSPacketBuffer {
+            data,
+            pos: 0,
+            labels_lookup: BTreeMap::<String, u16>::new(),
+        }
     }
 
     pub fn get_pos(&self) -> usize {
@@ -114,5 +121,17 @@ impl DNSPacketBuffer {
         self.write_u8(fourth_byte)?;
 
         Ok(())
+    }
+
+    // NOTE: Label caching for DNS compression
+
+    /// Insert label sequence into buffer lookup cache.
+    pub fn cache_sequence(&mut self, label: &str, pos: u16) {
+        self.labels_lookup.insert(label.to_owned(), pos);
+    }
+
+    /// If label sequence exists in the lookup, return its position in the buffer, else return None.
+    pub fn sequence_check_cached(&self, label: &str) -> Option<u16> {
+        self.labels_lookup.get(label).copied()
     }
 }
