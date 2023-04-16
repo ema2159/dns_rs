@@ -4,14 +4,6 @@ use super::DNSPacketErr;
 #[derive(Debug, PartialEq)]
 pub struct DNSDomain(pub String);
 
-impl core::ops::Deref for DNSDomain {
-    type Target = String;
-
-    fn deref(&'_ self) -> &'_ Self::Target {
-        &self.0
-    }
-}
-
 impl DNSDomain {
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last label.
@@ -33,8 +25,8 @@ impl DNSDomain {
                 let next_pos = buffer.get_pos() + 2;
                 let jump_pos = buffer.read_u16()? ^ 0b1100_0000_0000_0000;
                 buffer.seek(jump_pos as usize);
-                let reused_labels = DNSDomain::parse_domain(buffer, jump + 1)?;
-                labels_buf.push(reused_labels.to_owned());
+                let DNSDomain(reused_labels) = DNSDomain::parse_domain(buffer, jump + 1)?;
+                labels_buf.push(reused_labels);
                 buffer.seek(next_pos);
                 break;
             }
@@ -70,7 +62,9 @@ impl DNSDomain {
 
     pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         const MAX_LABEL_SIZE: usize = 63;
-        for label in self.split('.') {
+
+        let DNSDomain(domain_string) = self;
+        for label in domain_string.split('.') {
             if label.len() > MAX_LABEL_SIZE {
                 return Err(DNSPacketErr::LabelTooLarge);
             }
