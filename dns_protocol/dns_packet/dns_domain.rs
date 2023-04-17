@@ -1,7 +1,7 @@
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 #[cfg(test)]
-use super::{HEADER_SIZE, PACKET_SIZE};
+use super::PACKET_SIZE;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSDomain(pub String);
@@ -98,6 +98,7 @@ impl DNSDomain {
         Ok(())
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,5 +142,45 @@ mod tests {
 
         assert_eq!(parsed_domain1, expected_domain1);
         assert_eq!(parsed_domain2, expected_domain2);
+    }
+
+    #[test]
+    fn test_write_to_buffer() {
+        let domain = DNSDomain("api.youtube.com".to_string());
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        domain.write_to_buffer(&mut buffer).unwrap();
+
+        let expected_domain_bytes = [
+            0x03, 0x61, 0x70, 0x69, 0x07, 0x79, 0x6f, 0x75, 0x74, 0x75, 0x62, 0x65, 0x03, 0x63,
+            0x6f, 0x6d, 0x00,
+        ];
+
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+        dns_packet_data[..expected_domain_bytes.len()].clone_from_slice(&expected_domain_bytes);
+        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        expected_buffer.seek(expected_domain_bytes.len());
+
+        assert_eq!(buffer.get_data(), expected_buffer.get_data())
+    }
+
+    #[test]
+    fn test_write_compression() {
+        let domain0 = DNSDomain("api.youtube.com".to_string());
+        let domain1 = DNSDomain("dev.youtube.com".to_string());
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        domain0.write_to_buffer(&mut buffer).unwrap();
+        domain1.write_to_buffer(&mut buffer).unwrap();
+
+        let expected_domain_bytes = [
+            0x03, 0x61, 0x70, 0x69, 0x07, 0x79, 0x6f, 0x75, 0x74, 0x75, 0x62, 0x65, 0x03, 0x63,
+            0x6f, 0x6d, 0x00, 0x03, 0x64, 0x65, 0x76, 0xC0, 0x04,
+        ];
+
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+        dns_packet_data[..expected_domain_bytes.len()].clone_from_slice(&expected_domain_bytes);
+        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        expected_buffer.seek(expected_domain_bytes.len());
+
+        assert_eq!(buffer.get_data(), expected_buffer.get_data())
     }
 }
