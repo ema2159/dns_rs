@@ -191,4 +191,35 @@ mod tests {
 
         assert_eq!(buffer.get_data(), expected_buffer.get_data())
     }
+
+    #[test]
+    fn test_label_too_large() {
+        let large_label =
+            "apigodanfpandsadkjsabdjkasdjasjdnapfnapifamnfpkamnfpkanfpanspfasfpsanfpa".to_string();
+        let domain = DNSDomain(large_label.clone());
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let res = domain.write_to_buffer(&mut buffer);
+
+        let expected = Err(DNSPacketErr::LabelTooLarge(
+            large_label.clone(),
+            large_label.len(),
+        ));
+
+        assert_eq!(res, expected)
+    }
+
+    #[test]
+    fn test_domain_too_large() {
+        let super_long_domain = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd".to_string();
+        let domain = DNSDomain(super_long_domain.clone());
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let res = domain.write_to_buffer(&mut buffer);
+
+        let expected = Err(DNSPacketErr::DomainNameTooLarge(
+            super_long_domain.clone(),
+            super_long_domain.len(),
+        ));
+
+        assert_eq!(res, expected)
+    }
 }
