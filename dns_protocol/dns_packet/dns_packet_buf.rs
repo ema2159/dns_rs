@@ -36,6 +36,11 @@ impl DNSPacketBuffer {
 
     // NOTE: Reading methods
 
+    /// Return reference to data array
+    pub fn get_data(&self) -> &[u8; PACKET_SIZE] {
+        &self.data
+    }
+
     /// Read byte at current position. Don't move position pointer.
     pub fn get_u8(&self) -> Result<u8, DNSPacketErr> {
         if self.pos >= PACKET_SIZE {
