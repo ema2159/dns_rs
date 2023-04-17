@@ -66,16 +66,35 @@ impl DNSDomain {
         const MAX_LABEL_SIZE: usize = 63;
 
         let DNSDomain(domain_string) = self;
-        for label in domain_string.split('.') {
+
+        let labels_vec: Vec<&str> = domain_string.split('.').collect();
+
+        let mut jumped = false;
+
+        for (i, label) in labels_vec.iter().enumerate() {
+            let sequence_section = labels_vec[i..].join(".");
+            // Check if section of label sequence is cached. If it is, use it for DNS compression.
+            if let Some(cached_pos) = buffer.sequence_check_cached(&sequence_section) {
+                buffer.write_u16(cached_pos | 0xC000)?;
+                jumped = true;
+                break;
+            }
+
             if label.len() > MAX_LABEL_SIZE {
                 return Err(DNSPacketErr::LabelTooLarge);
             }
+
+            // If label sequence is not cached, cache it and write it to buffer.
+            buffer.cache_sequence(&sequence_section, buffer.get_pos() as u16);
             buffer.write_u8(label.len() as u8)?;
             for b in label.as_bytes() {
                 buffer.write_u8(*b)?;
             }
         }
-        buffer.write_u8(0x00)?;
+
+        if !jumped {
+            buffer.write_u8(0x00)?;
+        }
         Ok(())
     }
 }
