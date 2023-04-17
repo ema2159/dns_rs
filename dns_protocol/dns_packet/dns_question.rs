@@ -106,6 +106,6 @@ mod tests {
         let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
         expected_buffer.seek(HEADER_SIZE + dns_packet_question.len());
 
-        assert_eq!(buffer, expected_buffer)
+        assert_eq!(buffer.get_data(), expected_buffer.get_data())
     }
 }
