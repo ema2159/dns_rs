@@ -7,5 +7,6 @@ pub enum DNSPacketErr {
     NonUTF8Label,
     MaxJumps,
     BuffWrite,
-    LabelTooLarge,
+    LabelTooLarge(String, usize),
+    DomainNameTooLarge(String, usize),
 }

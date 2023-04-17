@@ -64,8 +64,16 @@ impl DNSDomain {
 
     pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         const MAX_LABEL_SIZE: usize = 63;
+        const MAX_DOMAIN_SIZE: usize = 253;
 
         let DNSDomain(domain_string) = self;
+
+        if domain_string.len() > MAX_DOMAIN_SIZE {
+            return Err(DNSPacketErr::DomainNameTooLarge(
+                domain_string.clone(),
+                domain_string.len(),
+            ));
+        }
 
         let labels_vec: Vec<&str> = domain_string.split('.').collect();
 
@@ -81,7 +89,7 @@ impl DNSDomain {
             }
 
             if label.len() > MAX_LABEL_SIZE {
-                return Err(DNSPacketErr::LabelTooLarge);
+                return Err(DNSPacketErr::LabelTooLarge(label.to_string(), label.len()));
             }
 
             // If label sequence is not cached, cache it and write it to buffer.

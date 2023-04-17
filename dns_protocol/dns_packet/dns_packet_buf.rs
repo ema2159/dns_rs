@@ -20,6 +20,7 @@ impl DNSPacketBuffer {
         }
     }
 
+    /// Get current buffer pointer position
     pub fn get_pos(&self) -> usize {
         self.pos
     }
