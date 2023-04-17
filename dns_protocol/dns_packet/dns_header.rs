@@ -95,6 +95,10 @@ impl DNSHeader {
     }
 
     pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        if buffer.get_pos() != 0 {
+            return Err(DNSPacketErr::BadPointerPosition);
+        }
+
         // NOTE: First and second bytes
         buffer.write_u16(self.id)?;
 
