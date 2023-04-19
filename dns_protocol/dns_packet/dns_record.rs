@@ -1,24 +1,25 @@
+mod A;
+mod Unknown;
 use super::DNSDomain;
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 use super::DNSQueryType;
 use super::HEADER_SIZE;
 
-use std::net::Ipv4Addr;
+use Unknown::UnknownRecord;
+use A::ARecord;
 
 #[derive(Debug, PartialEq)]
 pub enum DNSRecord {
-    A {
-        domain: DNSDomain,
-        addr: Ipv4Addr,
-        ttl: u32,
-    },
-    Unknown {
-        domain: DNSDomain,
-        record_type: u16,
-        data_len: u16,
-        ttl: u32,
-    },
+    A(ARecord),
+    Unknown(UnknownRecord),
+}
+
+pub trait DNSRecordType {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr>
+    where
+        Self: Sized;
+    fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr>;
 }
 
 #[derive(Debug, PartialEq)]
@@ -30,54 +31,51 @@ pub struct DNSRecordPreamble {
     pub len: u16,                  // 2 bytes
 }
 
-impl DNSRecord {
-    fn parse_type_a(
-        buffer: &mut DNSPacketBuffer,
-        preamble: DNSRecordPreamble,
-    ) -> Result<DNSRecord, DNSPacketErr> {
-        Ok(DNSRecord::A {
-            domain: preamble.domain,
-            addr: Ipv4Addr::from(buffer.read_u32()?),
-            ttl: preamble.ttl,
-        })
-    }
-
-    fn parse_type_unknown(
-        buffer: &mut DNSPacketBuffer,
-        preamble: DNSRecordPreamble,
-    ) -> Result<DNSRecord, DNSPacketErr> {
-        let DNSQueryType::Unknown(record_type_num) = preamble.record_type
-            else {
-                unreachable!()
-            };
-        // Skip reading package
-        buffer.step(preamble.len as usize);
-
-        Ok(DNSRecord::Unknown {
-            domain: preamble.domain,
-            record_type: record_type_num,
-            data_len: preamble.len,
-            ttl: preamble.ttl,
-        })
-    }
-
+impl DNSRecordPreamble {
     pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
-        if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPosition);
-        }
-
-        let preamble = DNSRecordPreamble {
+        Ok(DNSRecordPreamble {
             domain: DNSDomain::parse_domain(buffer, 0)?,
             record_type: DNSQueryType::from_num(buffer.read_u16()?),
             class: buffer.read_u16()?,
             ttl: buffer.read_u32()?,
             len: buffer.read_u16()?,
-        };
+        })
+    }
+
+    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        self.domain.write_to_buffer(buffer)?;
+        buffer.write_u16(self.record_type.to_num())?;
+        buffer.write_u16(self.class)?;
+        buffer.write_u32(self.ttl)?;
+        buffer.write_u16(self.len)?;
+
+        Ok(())
+    }
+}
+
+impl DNSRecord {
+    pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+        if buffer.get_pos() < HEADER_SIZE {
+            return Err(DNSPacketErr::BadPointerPosition);
+        }
+
+        let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
         let record = match preamble.record_type {
-            DNSQueryType::A => Ok(DNSRecord::parse_type_a(buffer, preamble)?),
-            DNSQueryType::Unknown(_) => Ok(DNSRecord::parse_type_unknown(buffer, preamble)?),
+            DNSQueryType::A => Ok(DNSRecord::A(ARecord::parse_from_buffer(buffer)?)),
+            DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(UnknownRecord::parse_from_buffer(
+                buffer,
+            )?)),
         }?;
 
         Ok(record)
+    }
+
+    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        if buffer.get_pos() < HEADER_SIZE {
+            return Err(DNSPacketErr::BadPointerPosition);
+        }
+        // let dns_record_type = self.record_type();
+        // Ok(())
+        unimplemented!()
     }
 }
