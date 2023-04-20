@@ -65,7 +65,9 @@ impl DNSRecord {
         let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
         let record = match preamble.record_type {
             DNSQueryType::A => Ok(DNSRecord::A(A::parse_from_buffer(buffer, preamble)?)),
-            DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(buffer, preamble)?)),
+            DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(
+                buffer, preamble,
+            )?)),
         }?;
 
         Ok(record)
@@ -75,8 +77,10 @@ impl DNSRecord {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
         }
-        // let dns_record_type = self.record_type();
-        // Ok(())
-        unimplemented!()
+        match self {
+            DNSRecord::A(record) => record.write_to_buffer(buffer)?,
+            DNSRecord::Unknown(record) => record.write_to_buffer(buffer)?,
+        };
+        Ok(())
     }
 }
