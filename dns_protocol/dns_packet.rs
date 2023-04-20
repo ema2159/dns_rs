@@ -178,11 +178,11 @@ mod tests {
             class: 0x01,
         }];
 
-        let expected_answers = vec![DNSRecord::A {
+        let expected_answers = vec![DNSRecord::A(A {
             domain: DNSDomain("google.com".to_string()),
             addr: Ipv4Addr::new(216, 58, 211, 142),
             ttl: 293,
-        }];
+        })];
 
         let expected_authorities = Vec::<DNSRecord>::new();
         let expected_additional_records = Vec::<DNSRecord>::new();
@@ -239,17 +239,17 @@ mod tests {
         }];
 
         let expected_answers = vec![
-            DNSRecord::Unknown {
+            DNSRecord::Unknown(Unknown {
                 domain: DNSDomain("google.com".to_string()),
                 record_type: 255,
                 data_len: 4,
                 ttl: 293,
-            },
-            DNSRecord::A {
+            }),
+            DNSRecord::A(A {
                 domain: DNSDomain("google.com".to_string()),
                 addr: Ipv4Addr::new(216, 58, 211, 142),
                 ttl: 293,
-            },
+            }),
         ];
 
         let expected_authorities = Vec::<DNSRecord>::new();
