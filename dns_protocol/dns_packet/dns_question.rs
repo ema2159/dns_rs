@@ -46,7 +46,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_read_header() {
+    fn test_read_question() {
         let dns_packet_questions = [
             0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01,
             0x00, 0x01, 0x05, 0x79, 0x61, 0x68, 0x6F, 0x6F, 0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00,
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn test_write_to_buffer() {
+    fn test_write_question() {
         let question = DNSQuestion {
             domain: DNSDomain("google.com".to_string()),
             record_type: DNSQueryType::A,

@@ -5,6 +5,8 @@ use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 use super::DNSQueryType;
 use super::HEADER_SIZE;
+#[cfg(test)]
+use super::PACKET_SIZE;
 
 pub use a_record::A;
 pub use unknown_record::Unknown;

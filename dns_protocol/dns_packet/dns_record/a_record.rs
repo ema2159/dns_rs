@@ -1,3 +1,5 @@
+#[cfg(test)]
+use super::PACKET_SIZE;
 use super::{
     DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSRecordPreamble, DNSRecordType, HEADER_SIZE,
 };
@@ -41,5 +43,36 @@ impl DNSRecordType for A {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_a() {
+        let dns_packet_records = [
+            0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01,
+            0x00, 0x01, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x04, 0xFF, 0x00, 0x08, 0x0F,
+        ];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+
+        dns_packet_data[HEADER_SIZE..HEADER_SIZE + dns_packet_records.len()]
+            .clone_from_slice(&dns_packet_records);
+
+        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        dns_packet_buffer.seek(HEADER_SIZE);
+
+        let preamble = DNSRecordPreamble::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_record = A::parse_from_buffer(&mut dns_packet_buffer, preamble).unwrap();
+
+        let expected_record = A {
+            domain: DNSDomain("google.com".to_string()),
+            addr: Ipv4Addr::new(255, 0, 8, 15),
+            ttl: 255,
+        };
+
+        assert_eq!(parsed_record, expected_record);
     }
 }
