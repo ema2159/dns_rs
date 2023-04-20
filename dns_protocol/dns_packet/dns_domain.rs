@@ -62,7 +62,7 @@ impl DNSDomain {
         Ok(DNSDomain(label_sequence))
     }
 
-    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         const MAX_LABEL_SIZE: usize = 63;
         const MAX_DOMAIN_SIZE: usize = 253;
 

@@ -24,7 +24,7 @@ pub trait DNSRecordType {
     ) -> Result<Self, DNSPacketErr>
     where
         Self: Sized;
-    fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr>;
+    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr>;
 }
 
 #[derive(Debug, PartialEq)]
@@ -47,7 +47,7 @@ impl DNSRecordPreamble {
         })
     }
 
-    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         self.domain.write_to_buffer(buffer)?;
         buffer.write_u16(self.record_type.to_num())?;
         buffer.write_u16(self.class)?;
@@ -75,7 +75,7 @@ impl DNSRecord {
         Ok(record)
     }
 
-    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
         }

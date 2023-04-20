@@ -45,6 +45,18 @@ impl DNSPacket {
         Ok(questions)
     }
 
+    /// Write DNS questions to packet buffer
+    fn write_questions(
+        questions: &Vec<DNSQuestion>,
+        buffer: &mut DNSPacketBuffer,
+    ) -> Result<(), DNSPacketErr> {
+        for question in questions.iter() {
+            question.write_to_buffer(buffer)?;
+        }
+
+        Ok(())
+    }
+
     /// Parse DNS record starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last answer.
     fn parse_records(
@@ -56,6 +68,18 @@ impl DNSPacket {
             records.push(DNSRecord::parse_from_buffer(buffer)?);
         }
         Ok(records)
+    }
+
+    /// Write DNS records in packet struct to buffer
+    fn write_records(
+        records: &Vec<DNSRecord>,
+        buffer: &mut DNSPacketBuffer,
+    ) -> Result<(), DNSPacketErr> {
+        for record in records.iter() {
+            record.write_to_buffer(buffer)?;
+        }
+
+        Ok(())
     }
 
     /// Parse DNS information.

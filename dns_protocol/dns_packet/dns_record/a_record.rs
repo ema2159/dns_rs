@@ -28,7 +28,7 @@ impl DNSRecordType for A {
         })
     }
 
-    fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         const RECORD_TYPE: u16 = 1;
         const CLASS: u16 = 1;
         const LEN: u16 = 4;
