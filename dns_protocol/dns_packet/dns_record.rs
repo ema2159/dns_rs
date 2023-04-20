@@ -1,22 +1,25 @@
-mod A;
-mod Unknown;
+mod a_record;
+mod unknown_record;
 use super::DNSDomain;
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 use super::DNSQueryType;
 use super::HEADER_SIZE;
 
-use Unknown::UnknownRecord;
-use A::ARecord;
+pub use a_record::A;
+pub use unknown_record::Unknown;
 
 #[derive(Debug, PartialEq)]
 pub enum DNSRecord {
-    A(ARecord),
-    Unknown(UnknownRecord),
+    A(A),
+    Unknown(Unknown),
 }
 
 pub trait DNSRecordType {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr>
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        preamble: DNSRecordPreamble,
+    ) -> Result<Self, DNSPacketErr>
     where
         Self: Sized;
     fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr>;
@@ -61,10 +64,8 @@ impl DNSRecord {
 
         let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
         let record = match preamble.record_type {
-            DNSQueryType::A => Ok(DNSRecord::A(ARecord::parse_from_buffer(buffer)?)),
-            DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(UnknownRecord::parse_from_buffer(
-                buffer,
-            )?)),
+            DNSQueryType::A => Ok(DNSRecord::A(A::parse_from_buffer(buffer, preamble)?)),
+            DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(buffer, preamble)?)),
         }?;
 
         Ok(record)

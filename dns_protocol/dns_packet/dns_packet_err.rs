@@ -1,3 +1,5 @@
+// use std::error::Error;
+
 #[derive(Debug, PartialEq)]
 pub enum DNSPacketErr {
     EndOfBuffer,
@@ -11,3 +13,5 @@ pub enum DNSPacketErr {
     DomainNameTooLarge(String, usize),
     UnknownRecordSend,
 }
+
+// impl Error for DNSPacketErr {};

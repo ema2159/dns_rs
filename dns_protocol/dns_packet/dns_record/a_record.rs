@@ -4,20 +4,22 @@ use super::{
 use std::net::Ipv4Addr;
 
 #[derive(Debug, PartialEq)]
-pub struct ARecord {
-    domain: DNSDomain,
-    addr: Ipv4Addr,
-    ttl: u32,
+pub struct A {
+    pub domain: DNSDomain,
+    pub addr: Ipv4Addr,
+    pub ttl: u32,
 }
 
-impl DNSRecordType for ARecord {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl DNSRecordType for A {
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        preamble: DNSRecordPreamble,
+    ) -> Result<Self, DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
         }
 
-        let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
-        Ok(ARecord {
+        Ok(A {
             domain: preamble.domain,
             addr: Ipv4Addr::from(buffer.read_u32()?),
             ttl: preamble.ttl,
