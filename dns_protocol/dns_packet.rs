@@ -26,6 +26,8 @@ pub struct DNSPacket {
 }
 
 impl DNSPacket {
+    // NOTE: Buffer parsing functions
+
     /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
     /// header.
     fn parse_header(buffer: &mut DNSPacketBuffer) -> Result<DNSHeader, DNSPacketErr> {
@@ -45,18 +47,6 @@ impl DNSPacket {
         Ok(questions)
     }
 
-    /// Write DNS questions to packet buffer
-    fn write_questions(
-        questions: &Vec<DNSQuestion>,
-        buffer: &mut DNSPacketBuffer,
-    ) -> Result<(), DNSPacketErr> {
-        for question in questions.iter() {
-            question.write_to_buffer(buffer)?;
-        }
-
-        Ok(())
-    }
-
     /// Parse DNS record starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last answer.
     fn parse_records(
@@ -68,18 +58,6 @@ impl DNSPacket {
             records.push(DNSRecord::parse_from_buffer(buffer)?);
         }
         Ok(records)
-    }
-
-    /// Write DNS records in packet struct to buffer
-    fn write_records(
-        records: &Vec<DNSRecord>,
-        buffer: &mut DNSPacketBuffer,
-    ) -> Result<(), DNSPacketErr> {
-        for record in records.iter() {
-            record.write_to_buffer(buffer)?;
-        }
-
-        Ok(())
     }
 
     /// Parse DNS information.
@@ -97,6 +75,33 @@ impl DNSPacket {
             additional_records,
         })
     }
+
+    // NOTE: Buffer writing functions
+
+    /// Write DNS questions to packet buffer
+    fn write_questions(
+        questions: &[DNSQuestion],
+        buffer: &mut DNSPacketBuffer,
+    ) -> Result<(), DNSPacketErr> {
+        for question in questions.iter() {
+            question.write_to_buffer(buffer)?;
+        }
+
+        Ok(())
+    }
+
+    /// Write DNS records in packet struct to buffer
+    fn write_records(
+        records: &[DNSRecord],
+        buffer: &mut DNSPacketBuffer,
+    ) -> Result<(), DNSPacketErr> {
+        for record in records.iter() {
+            record.write_to_buffer(buffer)?;
+        }
+
+        Ok(())
+    }
+
 }
 
 #[cfg(test)]
