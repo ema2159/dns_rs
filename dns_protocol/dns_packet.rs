@@ -60,7 +60,7 @@ impl DNSPacket {
         Ok(records)
     }
 
-    /// Parse DNS information.
+    /// Parse DNS packet.
     pub fn parse_dns_packet(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         let header = Self::parse_header(buffer)?;
         let questions = Self::parse_questions(buffer, header.question_count)?;
@@ -78,7 +78,7 @@ impl DNSPacket {
 
     // NOTE: Buffer writing functions
 
-    /// Write DNS questions to packet buffer
+    /// Write DNS questions to packet buffer.
     fn write_questions(
         questions: &[DNSQuestion],
         buffer: &mut DNSPacketBuffer,
@@ -90,7 +90,7 @@ impl DNSPacket {
         Ok(())
     }
 
-    /// Write DNS records in packet struct to buffer
+    /// Write DNS records in packet struct to buffer.
     fn write_records(
         records: &[DNSRecord],
         buffer: &mut DNSPacketBuffer,
@@ -102,6 +102,16 @@ impl DNSPacket {
         Ok(())
     }
 
+    /// Write DNS packet.
+    pub fn write_dns_packet(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        self.header.write_to_buffer(buffer)?;
+        Self::write_questions(&self.questions, buffer)?;
+        Self::write_records(&self.answers, buffer)?;
+        Self::write_records(&self.authorities, buffer)?;
+        Self::write_records(&self.additional_records, buffer)?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
