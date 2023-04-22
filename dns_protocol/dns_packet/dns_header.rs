@@ -18,6 +18,20 @@ pub enum DNSResponseCode {
 }
 
 impl DNSResponseCode {
+    fn to_num(&self) -> u8 {
+        match self {
+            Self::NoError => 0,
+            Self::FormErr => 1,
+            Self::ServFail => 2,
+            Self::NXDomain => 3,
+            Self::NoTimp => 4,
+            Self::Refused => 5,
+            Self::YXDomain => 6,
+            Self::XRRset => 7,
+            Self::NoAuth => 8,
+            Self::NotZone => 9,
+        }
+    }
     fn from_num(code_num: u8) -> Result<DNSResponseCode, DNSPacketErr> {
         match code_num {
             0 => Ok(Self::NoError),
@@ -94,7 +108,7 @@ impl DNSHeader {
         })
     }
 
-    pub fn write_to_buffer(self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         if buffer.get_pos() != 0 {
             return Err(DNSPacketErr::BadPointerPosition);
         }
@@ -112,8 +126,9 @@ impl DNSHeader {
         buffer.write_u8(third_byte)?;
 
         // NOTE: Fourth byte
-        let fourth_byte =
-            (self.recursion_available as u8) << 7 | self.reserved << 4 | (self.response_code as u8);
+        let fourth_byte = (self.recursion_available as u8) << 7
+            | self.reserved << 4
+            | self.response_code.to_num();
 
         buffer.write_u8(fourth_byte)?;
 
