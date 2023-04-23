@@ -69,4 +69,22 @@ mod tests {
 
         assert_eq!(parsed_record, expected_record);
     }
+
+    #[test]
+    fn test_write_unknown() {
+        let unknown_record = Unknown {
+            domain: DNSDomain("youtube.com".to_string()),
+            record_type: 171,
+            data_len: 7,
+            ttl: 2748,
+        };
+
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        buffer.seek(HEADER_SIZE);
+        let err = unknown_record.write_to_buffer(&mut buffer);
+
+        let expected_err = Err(DNSPacketErr::UnknownRecordSend);
+
+        assert_eq!(err, expected_err)
+    }
 }

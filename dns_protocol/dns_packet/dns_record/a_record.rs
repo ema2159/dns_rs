@@ -75,4 +75,32 @@ mod tests {
 
         assert_eq!(parsed_record, expected_record);
     }
+
+    #[test]
+    fn test_write_a() {
+        let a_record = A {
+            domain: DNSDomain("youtube.com".to_string()),
+            addr: Ipv4Addr::new(255, 20, 28, 35),
+            ttl: 171,
+        };
+
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        buffer.seek(HEADER_SIZE);
+        a_record.write_to_buffer(&mut buffer).unwrap();
+
+        // Expected
+        let expected_a_record = [
+            0x07, 0x79, 0x6f, 0x75, 0x74, 0x75, 0x62, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00,
+            0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0xAB, 0x00, 0x04, 0xFF, 0x14, 0x1C, 0x23,
+        ];
+        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
+
+        dns_packet_data[HEADER_SIZE..HEADER_SIZE + expected_a_record.len()]
+            .clone_from_slice(&expected_a_record);
+
+        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        expected_buffer.seek(HEADER_SIZE + expected_a_record.len());
+
+        assert_eq!(buffer.get_data(), expected_buffer.get_data())
+    }
 }
