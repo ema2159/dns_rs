@@ -9,4 +9,4 @@ edition = "2021"
 
 [lib]
 name = "dns_rs"
-path = "lib.rs"
+path = "src/lib.rs"
