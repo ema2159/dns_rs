@@ -26,6 +26,43 @@ pub struct DNSPacket {
 }
 
 impl DNSPacket {
+    // NOTE: Constructor
+    pub fn new(
+        header: DNSHeader,
+        questions: Option<Vec<DNSQuestion>>,
+        answers: Option<Vec<DNSRecord>>,
+        authorities: Option<Vec<DNSRecord>>,
+        additional_records: Option<Vec<DNSRecord>>,
+    ) -> Self {
+        let questions = if let Some(questions) = questions {
+            questions
+        } else {
+            Vec::new()
+        };
+        let answers = if let Some(answers) = answers {
+            answers
+        } else {
+            Vec::new()
+        };
+        let authorities = if let Some(authorities) = authorities {
+            authorities
+        } else {
+            Vec::new()
+        };
+        let additional_records = if let Some(additional_records) = additional_records {
+            additional_records
+        } else {
+            Vec::new()
+        };
+        DNSPacket {
+            header,
+            questions,
+            answers,
+            authorities,
+            additional_records,
+        }
+    }
+
     // NOTE: Buffer parsing functions
 
     /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
