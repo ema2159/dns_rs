@@ -157,7 +157,7 @@ mod tests {
     use std::net::Ipv4Addr;
 
     #[test]
-    fn test_query_packet() {
+    fn test_read_query_packet() {
         let dns_packet_init = [
             0x86, 0x2a, 0x01, 0x20, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    fn test_answer_packet_a_record() {
+    fn test_read_answer_packet_a_record() {
         let dns_packet_init = [
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn test_answer_packet_unknown_record() {
+    fn test_read_answer_packet_unknown_record() {
         let dns_packet_init = [
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
@@ -342,5 +342,111 @@ mod tests {
         assert_eq!(parsed_dns_packet.header, expected_packet.header);
         assert_eq!(parsed_dns_packet.questions, expected_packet.questions);
         assert_eq!(parsed_dns_packet.answers, expected_packet.answers);
+    }
+
+    #[test]
+    fn test_write_read_0() {
+        let original_header = DNSHeader {
+            id: 0x862a,
+            query_response: false,
+            opcode: 0,
+            authoritative_answer: false,
+            truncated_message: false,
+            recursion_desired: true,
+            recursion_available: false,
+            reserved: 2,
+            response_code: DNSResponseCode::NoError,
+            question_count: 5,
+            answer_count: 2,
+            authority_count: 2,
+            additional_count: 2,
+        };
+
+        let original_questions = vec![
+            DNSQuestion {
+                domain: DNSDomain("google.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x01,
+            },
+            DNSQuestion {
+                domain: DNSDomain("yahoo.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x00,
+            },
+            DNSQuestion {
+                domain: DNSDomain("dev.google.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x01,
+            },
+            DNSQuestion {
+                domain: DNSDomain("api.dev.google.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x00,
+            },
+            DNSQuestion {
+                domain: DNSDomain("dev.yahoo.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 0x01,
+            },
+        ];
+
+        let original_answers = vec![
+            DNSRecord::A(A {
+                domain: DNSDomain("api.dev.google.com".to_string()),
+                addr: Ipv4Addr::new(16, 28, 21, 42),
+                ttl: 342,
+            }),
+            DNSRecord::A(A {
+                domain: DNSDomain("yahoo.com".to_string()),
+                addr: Ipv4Addr::new(216, 58, 211, 142),
+                ttl: 272,
+            }),
+        ];
+
+        let original_authorities = vec![
+            DNSRecord::A(A {
+                domain: DNSDomain("api.dev.yahoo.com".to_string()),
+                addr: Ipv4Addr::new(116, 253, 244, 2),
+                ttl: 278,
+            }),
+            DNSRecord::A(A {
+                domain: DNSDomain("yahoo.com".to_string()),
+                addr: Ipv4Addr::new(255, 244, 233, 222),
+                ttl: 22,
+            }),
+        ];
+
+        let original_additional_records = vec![
+            DNSRecord::A(A {
+                domain: DNSDomain("google.com".to_string()),
+                addr: Ipv4Addr::new(216, 58, 211, 142),
+                ttl: 93,
+            }),
+            DNSRecord::A(A {
+                domain: DNSDomain("api.google.com".to_string()),
+                addr: Ipv4Addr::new(216, 58, 211, 142),
+                ttl: 93,
+            }),
+        ];
+
+        let original_packet = DNSPacket::new(
+            original_header,
+            Some(original_questions),
+            Some(original_answers),
+            Some(original_authorities),
+            Some(original_additional_records),
+        );
+
+        let mut dns_packet_buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        original_packet
+            .write_dns_packet(&mut dns_packet_buffer)
+            .unwrap();
+
+        // Read
+        dns_packet_buffer.seek(0);
+
+        let parsed_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
+
+        assert_eq!(original_packet, parsed_packet);
     }
 }
