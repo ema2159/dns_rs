@@ -1,7 +1,7 @@
 mod dns_domain;
 mod dns_header;
 mod dns_packet_buf;
-mod dns_packet_err;
+pub mod dns_packet_err;
 mod dns_qtype;
 mod dns_question;
 mod dns_record;
