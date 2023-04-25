@@ -35,7 +35,7 @@ impl DNSRecordType for Unknown {
     }
 
     fn write_to_buffer(&self, _buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
-        Err(DNSPacketErr::UnknownRecordSend)
+        Err(DNSPacketErr::UnknownRecord)
     }
 }
 
@@ -83,7 +83,7 @@ mod tests {
         buffer.seek(HEADER_SIZE);
         let err = unknown_record.write_to_buffer(&mut buffer);
 
-        let expected_err = Err(DNSPacketErr::UnknownRecordSend);
+        let expected_err = Err(DNSPacketErr::UnknownRecord);
 
         assert_eq!(err, expected_err)
     }

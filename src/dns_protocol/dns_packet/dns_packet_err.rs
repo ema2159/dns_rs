@@ -11,7 +11,7 @@ pub enum DNSPacketErr {
     BuffWrite,
     LabelTooLarge(String, usize),
     DomainNameTooLarge(String, usize),
-    UnknownRecordSend,
+    UnknownRecord,
 }
 
 // impl Error for DNSPacketErr {};
