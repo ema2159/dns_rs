@@ -1,5 +1,4 @@
-#[cfg(test)]
-use super::PACKET_SIZE;
+
 use super::{
     DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSRecordPreamble, DNSRecordType, HEADER_SIZE,
 };

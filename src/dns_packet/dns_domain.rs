@@ -1,7 +1,6 @@
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
-#[cfg(test)]
-use super::PACKET_SIZE;
+
 
 #[derive(Debug, PartialEq)]
 pub struct DNSDomain(pub String);

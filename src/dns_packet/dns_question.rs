@@ -3,8 +3,7 @@ use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 use super::DNSQueryType;
 use super::HEADER_SIZE;
-#[cfg(test)]
-use super::PACKET_SIZE;
+
 
 #[derive(Debug, PartialEq)]
 pub struct DNSQuestion {
