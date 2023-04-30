@@ -1,17 +1,17 @@
 mod dns_domain;
 mod dns_header;
 mod dns_packet_buf;
-pub mod dns_packet_err;
+mod dns_packet_err;
 mod dns_qtype;
 mod dns_question;
 mod dns_record;
-use dns_domain::*;
-use dns_header::*;
-use dns_packet_buf::*;
-use dns_packet_err::*;
-use dns_qtype::*;
-use dns_question::*;
-use dns_record::*;
+pub use dns_domain::*;
+pub use dns_header::*;
+pub use dns_packet_buf::*;
+pub use dns_packet_err::*;
+pub use dns_qtype::*;
+pub use dns_question::*;
+pub use dns_record::*;
 
 const PACKET_SIZE: usize = 512;
 const HEADER_SIZE: usize = 12;
