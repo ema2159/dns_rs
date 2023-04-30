@@ -13,8 +13,8 @@ pub use dns_qtype::*;
 pub use dns_question::*;
 pub use dns_record::*;
 
-const PACKET_SIZE: usize = 512;
-const HEADER_SIZE: usize = 12;
+pub const PACKET_SIZE: usize = 512;
+pub const HEADER_SIZE: usize = 12;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSPacket {
