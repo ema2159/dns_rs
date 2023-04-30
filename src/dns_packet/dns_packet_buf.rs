@@ -12,7 +12,7 @@ pub struct DNSPacketBuffer {
 
 impl DNSPacketBuffer {
     /// Initializes DNS packet buffer with the given data and its position pointer set to 0.
-    pub(crate) fn new(data: &[u8]) -> Self {
+    pub fn new(data: &[u8]) -> Self {
         let mut buf_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
         buf_data[0..data.len()].clone_from_slice(data);
 
