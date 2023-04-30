@@ -140,14 +140,16 @@ impl DNSPacket {
     }
 
     /// Write DNS packet.
-    pub fn write_dns_packet(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
-        self.header.write_to_buffer(buffer)?;
-        Self::write_questions(&self.questions, buffer)?;
-        Self::write_records(&self.answers, buffer)?;
-        Self::write_records(&self.authorities, buffer)?;
-        Self::write_records(&self.additional_records, buffer)?;
+    pub fn write_dns_packet(&self) -> Result<DNSPacketBuffer, DNSPacketErr> {
+        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
 
-        Ok(())
+        self.header.write_to_buffer(&mut buffer)?;
+        Self::write_questions(&self.questions, &mut buffer)?;
+        Self::write_records(&self.answers, &mut buffer)?;
+        Self::write_records(&self.authorities, &mut buffer)?;
+        Self::write_records(&self.additional_records, &mut buffer)?;
+
+        Ok(buffer)
     }
 }
 
@@ -437,10 +439,7 @@ mod tests {
             Some(original_additional_records),
         );
 
-        let mut dns_packet_buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
-        original_packet
-            .write_dns_packet(&mut dns_packet_buffer)
-            .unwrap();
+        let mut dns_packet_buffer = original_packet.write_dns_packet().unwrap();
 
         // Read
         dns_packet_buffer.seek(0);
