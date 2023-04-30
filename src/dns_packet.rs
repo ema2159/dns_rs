@@ -141,7 +141,7 @@ impl DNSPacket {
 
     /// Write DNS packet.
     pub fn write_dns_packet(&self) -> Result<DNSPacketBuffer, DNSPacketErr> {
-        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let mut buffer = DNSPacketBuffer::new(&[0; PACKET_SIZE]);
 
         self.header.write_to_buffer(&mut buffer)?;
         Self::write_questions(&self.questions, &mut buffer)?;
@@ -160,17 +160,14 @@ mod tests {
 
     #[test]
     fn test_read_query_packet() {
-        let dns_packet_init = [
+        let dns_packet_data = [
             0x86, 0x2a, 0x01, 0x20, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
             0x05, 0x79, 0x61, 0x68, 0x6F, 0x6F, 0x03, 0x63, 0x6F, 0x6D, 0x00, 0x00, 0x01, 0x00,
             0x00,
         ];
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
-        dns_packet_data[0..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
-
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {
@@ -221,17 +218,14 @@ mod tests {
 
     #[test]
     fn test_read_answer_packet_a_record() {
-        let dns_packet_init = [
+        let dns_packet_data = [
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
             0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25, 0x00, 0x04, 0xd8, 0x3a,
             0xd3, 0x8e,
         ];
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
-        dns_packet_data[0..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
-
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {
@@ -280,18 +274,15 @@ mod tests {
 
     #[test]
     fn test_read_answer_packet_unknown_record() {
-        let dns_packet_init = [
+        let dns_packet_data = [
             0x86, 0x2a, 0x81, 0x80, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
             0xc0, 0x0c, 0x00, 0xFF, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25, 0x00, 0x04, 0xd8, 0x3a,
             0xd3, 0x8e, 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25, 0x00, 0x04,
             0xd8, 0x3a, 0xd3, 0x8e,
         ];
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
-        dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
-
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {

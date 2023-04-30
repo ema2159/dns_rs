@@ -148,14 +148,11 @@ mod tests {
 
     #[test]
     fn test_read_header() {
-        let dns_packet_init = [
+        let dns_packet_data = [
             0x55, 0x44, 0x7E, 0xF9, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x91,
         ];
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
-        dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
-
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_header = DNSHeader::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
         let expected_header = DNSHeader {
@@ -179,14 +176,11 @@ mod tests {
 
     #[test]
     fn test_wrong_rcode() {
-        let dns_packet_init = [
+        let dns_packet_data = [
             0x55, 0x44, 0x7E, 0xFF, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x91,
         ];
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
 
-        dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
-
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_header = DNSHeader::parse_from_buffer(&mut dns_packet_buffer);
 
         let expected = Err(DNSPacketErr::UnknownResponseCode(0xF));
@@ -212,7 +206,7 @@ mod tests {
             additional_count: 0x7891,
         };
 
-        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let mut buffer = DNSPacketBuffer::new(&[0; PACKET_SIZE]);
 
         header.write_to_buffer(&mut buffer).unwrap();
 
@@ -224,7 +218,7 @@ mod tests {
 
         dns_packet_data[..dns_packet_init.len()].clone_from_slice(&dns_packet_init);
 
-        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut expected_buffer = DNSPacketBuffer::new(&dns_packet_data);
         expected_buffer.seek(HEADER_SIZE);
 
         assert_eq!(buffer, expected_buffer)

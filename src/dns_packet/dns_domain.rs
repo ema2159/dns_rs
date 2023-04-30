@@ -113,14 +113,11 @@ mod tests {
 
     #[test]
     fn test_parse_domain() {
-        let domain_bytes = [
+        let domain_data = [
             0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
         ];
 
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
-
-        dns_packet_data[..domain_bytes.len()].clone_from_slice(&domain_bytes);
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&domain_data);
 
         let parsed_domain = DNSDomain::parse_domain(&mut dns_packet_buffer, 0).unwrap();
 
@@ -130,16 +127,13 @@ mod tests {
 
     #[test]
     fn test_jump_err() {
-        let domain_bytes = [
+        let domain_data = [
             0x06, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01,
             0x00, 0x01, 0xc0, 0x10, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x25, 0x00, 0x04,
             0xd8, 0x3a, 0xd3, 0x8e,
         ];
 
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
-
-        dns_packet_data[..domain_bytes.len()].clone_from_slice(&domain_bytes);
-        let mut dns_packet_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut dns_packet_buffer = DNSPacketBuffer::new(&domain_data);
 
         let parsed_domain1 = DNSDomain::parse_domain(&mut dns_packet_buffer, 0);
         dns_packet_buffer.step(4); // Skip rest of the record information. Jump to next domain
@@ -155,7 +149,7 @@ mod tests {
     #[test]
     fn test_write_to_buffer() {
         let domain = DNSDomain("api.youtube.com".to_string());
-        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let mut buffer = DNSPacketBuffer::new(&[]);
         domain.write_to_buffer(&mut buffer).unwrap();
 
         let expected_domain_bytes = [
@@ -163,9 +157,7 @@ mod tests {
             0x6f, 0x6d, 0x00,
         ];
 
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
-        dns_packet_data[..expected_domain_bytes.len()].clone_from_slice(&expected_domain_bytes);
-        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut expected_buffer = DNSPacketBuffer::new(&expected_domain_bytes);
         expected_buffer.seek(expected_domain_bytes.len());
 
         assert_eq!(buffer.get_data(), expected_buffer.get_data())
@@ -175,7 +167,7 @@ mod tests {
     fn test_write_compression() {
         let domain0 = DNSDomain("api.youtube.com".to_string());
         let domain1 = DNSDomain("dev.youtube.com".to_string());
-        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let mut buffer = DNSPacketBuffer::new(&[]);
         domain0.write_to_buffer(&mut buffer).unwrap();
         domain1.write_to_buffer(&mut buffer).unwrap();
 
@@ -184,9 +176,7 @@ mod tests {
             0x6f, 0x6d, 0x00, 0x03, 0x64, 0x65, 0x76, 0xC0, 0x04,
         ];
 
-        let mut dns_packet_data: [u8; PACKET_SIZE] = [0; PACKET_SIZE];
-        dns_packet_data[..expected_domain_bytes.len()].clone_from_slice(&expected_domain_bytes);
-        let mut expected_buffer = DNSPacketBuffer::new(dns_packet_data);
+        let mut expected_buffer = DNSPacketBuffer::new(&expected_domain_bytes);
         expected_buffer.seek(expected_domain_bytes.len());
 
         assert_eq!(buffer.get_data(), expected_buffer.get_data())
@@ -197,7 +187,7 @@ mod tests {
         let large_label =
             "apigodanfpandsadkjsabdjkasdjasjdnapfnapifamnfpkamnfpkanfpanspfasfpsanfpa".to_string();
         let domain = DNSDomain(large_label.clone());
-        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let mut buffer = DNSPacketBuffer::new(&[]);
         let res = domain.write_to_buffer(&mut buffer);
 
         let expected = Err(DNSPacketErr::LabelTooLarge(
@@ -212,7 +202,7 @@ mod tests {
     fn test_domain_too_large() {
         let super_long_domain = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd".to_string();
         let domain = DNSDomain(super_long_domain.clone());
-        let mut buffer = DNSPacketBuffer::new([0; PACKET_SIZE]);
+        let mut buffer = DNSPacketBuffer::new(&[]);
         let res = domain.write_to_buffer(&mut buffer);
 
         let expected = Err(DNSPacketErr::DomainNameTooLarge(
