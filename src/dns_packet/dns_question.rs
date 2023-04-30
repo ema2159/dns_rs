@@ -14,7 +14,7 @@ pub struct DNSQuestion {
 }
 
 impl DNSQuestion {
-    pub fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+    pub(crate) fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
         }
@@ -29,7 +29,7 @@ impl DNSQuestion {
         })
     }
 
-    pub fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
         }

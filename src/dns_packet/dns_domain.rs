@@ -9,7 +9,7 @@ pub struct DNSDomain(pub String);
 impl DNSDomain {
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last label.
-    pub fn parse_domain(buffer: &mut DNSPacketBuffer, jump: u8) -> Result<DNSDomain, DNSPacketErr> {
+    pub(crate) fn parse_domain(buffer: &mut DNSPacketBuffer, jump: u8) -> Result<DNSDomain, DNSPacketErr> {
         const MAX_JUMPS: u8 = 5;
         if jump == MAX_JUMPS {
             return Err(DNSPacketErr::MaxJumps);
@@ -62,7 +62,7 @@ impl DNSDomain {
         Ok(DNSDomain(label_sequence))
     }
 
-    pub fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         const MAX_LABEL_SIZE: usize = 63;
         const MAX_DOMAIN_SIZE: usize = 253;
 
