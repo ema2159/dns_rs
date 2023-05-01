@@ -1,6 +1,7 @@
 #[derive(Debug, PartialEq)]
 pub enum DNSQueryType {
     A,
+    AAAA,
     Unknown(u16),
 }
 
@@ -8,6 +9,7 @@ impl DNSQueryType {
     pub fn from_num(code_num: u16) -> DNSQueryType {
         match code_num {
             1 => DNSQueryType::A,
+            28 => DNSQueryType::AAAA,
             _ => DNSQueryType::Unknown(code_num),
         }
     }
@@ -15,6 +17,7 @@ impl DNSQueryType {
     pub fn to_num(&self) -> u16 {
         match self {
             DNSQueryType::A => 1,
+            DNSQueryType::AAAA => 28,
             DNSQueryType::Unknown(code) => *code,
         }
     }
