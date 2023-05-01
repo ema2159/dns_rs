@@ -45,5 +45,5 @@ fn stub_resolver_0() {
 
     let recv_packet = DNSPacket::parse_dns_packet(&mut DNSPacketBuffer::new(&recv_data));
 
-    println!("{:?}", recv_packet)
+    println!("{:#?}", recv_packet)
 }
