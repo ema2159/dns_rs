@@ -74,7 +74,7 @@ impl DNSRecord {
             DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(
                 buffer, preamble,
             )?)),
-            _ => Err(DNSPacketErr::UnimplementedRecordType),
+            unimplemented_qtype => Err(DNSPacketErr::UnimplementedRecordType(unimplemented_qtype)),
         }?;
 
         Ok(record)
