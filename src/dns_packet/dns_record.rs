@@ -1,5 +1,6 @@
 mod a_record;
 mod aaaa_record;
+mod soa_record;
 mod unknown_record;
 use super::DNSDomain;
 use super::DNSPacketBuffer;
@@ -11,12 +12,14 @@ use super::PACKET_SIZE;
 
 pub use a_record::A;
 pub use aaaa_record::AAAA;
+pub use soa_record::SOA;
 pub use unknown_record::Unknown;
 
 #[derive(Debug, PartialEq)]
 pub enum DNSRecord {
     A(A),
     AAAA(AAAA),
+    SOA(SOA),
     Unknown(Unknown),
 }
 
@@ -71,6 +74,7 @@ impl DNSRecord {
         let record = match preamble.record_type {
             DNSQueryType::A => Ok(DNSRecord::A(A::parse_from_buffer(buffer, preamble)?)),
             DNSQueryType::AAAA => Ok(DNSRecord::AAAA(AAAA::parse_from_buffer(buffer, preamble)?)),
+            DNSQueryType::SOA => Ok(DNSRecord::SOA(SOA::parse_from_buffer(buffer, preamble)?)),
             DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(
                 buffer, preamble,
             )?)),
@@ -87,8 +91,10 @@ impl DNSRecord {
         match self {
             DNSRecord::A(record) => record.write_to_buffer(buffer)?,
             DNSRecord::AAAA(record) => record.write_to_buffer(buffer)?,
+            DNSRecord::SOA(record) => record.write_to_buffer(buffer)?,
             DNSRecord::Unknown(record) => record.write_to_buffer(buffer)?,
         };
         Ok(())
     }
 }
+
