@@ -1,4 +1,3 @@
-
 use super::{
     DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSRecordPreamble, DNSRecordType, HEADER_SIZE,
 };
@@ -16,10 +15,6 @@ impl DNSRecordType for A {
         buffer: &mut DNSPacketBuffer,
         preamble: DNSRecordPreamble,
     ) -> Result<Self, DNSPacketErr> {
-        if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPosition);
-        }
-
         Ok(A {
             domain: preamble.domain,
             addr: Ipv4Addr::from(buffer.read_u32()?),

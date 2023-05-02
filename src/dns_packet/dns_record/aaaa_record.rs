@@ -15,10 +15,6 @@ impl DNSRecordType for AAAA {
         buffer: &mut DNSPacketBuffer,
         preamble: DNSRecordPreamble,
     ) -> Result<Self, DNSPacketErr> {
-        if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPosition);
-        }
-
         Ok(AAAA {
             domain: preamble.domain,
             addr: Ipv6Addr::new(
