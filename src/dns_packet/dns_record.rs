@@ -70,10 +70,11 @@ impl DNSRecord {
         let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
         let record = match preamble.record_type {
             DNSQueryType::A => Ok(DNSRecord::A(A::parse_from_buffer(buffer, preamble)?)),
+            DNSQueryType::AAAA => Ok(DNSRecord::AAAA(AAAA::parse_from_buffer(buffer, preamble)?)),
             DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(
                 buffer, preamble,
             )?)),
-            DNSQueryType::AAAA => Ok(DNSRecord::AAAA(AAAA::parse_from_buffer(buffer, preamble)?)),
+            _ => Err(DNSPacketErr::UnimplementedRecordType),
         }?;
 
         Ok(record)
