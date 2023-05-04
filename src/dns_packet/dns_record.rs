@@ -10,26 +10,39 @@ use super::HEADER_SIZE;
 #[cfg(test)]
 use super::PACKET_SIZE;
 
+use enum_dispatch::enum_dispatch;
+
 pub use a_record::A;
 pub use aaaa_record::AAAA;
 pub use soa_record::SOA;
 pub use unknown_record::Unknown;
 
 #[derive(Debug, PartialEq)]
-pub enum DNSRecord {
-    A(A),
-    AAAA(AAAA),
-    SOA(SOA),
-    Unknown(Unknown),
+pub struct DNSRecord {
+    pub preamble: DNSRecordPreamble,
+    pub data: DNSRecordData,
 }
 
-pub trait DNSRecordType {
+#[enum_dispatch]
+#[derive(Debug, PartialEq)]
+pub enum DNSRecordData {
+    A,
+    AAAA,
+    SOA,
+    Unknown,
+}
+
+pub trait DNSRecordDataRead {
     fn parse_from_buffer(
         buffer: &mut DNSPacketBuffer,
-        preamble: DNSRecordPreamble,
+        preamble: &DNSRecordPreamble,
     ) -> Result<Self, DNSPacketErr>
     where
         Self: Sized;
+}
+
+#[enum_dispatch(DNSRecordData)]
+pub trait DNSRecordDataWrite: std::fmt::Debug {
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr>;
 }
 
@@ -71,30 +84,31 @@ impl DNSRecord {
         }
 
         let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
-        let record = match preamble.record_type {
-            DNSQueryType::A => Ok(DNSRecord::A(A::parse_from_buffer(buffer, preamble)?)),
-            DNSQueryType::AAAA => Ok(DNSRecord::AAAA(AAAA::parse_from_buffer(buffer, preamble)?)),
-            DNSQueryType::SOA => Ok(DNSRecord::SOA(SOA::parse_from_buffer(buffer, preamble)?)),
-            DNSQueryType::Unknown(_) => Ok(DNSRecord::Unknown(Unknown::parse_from_buffer(
-                buffer, preamble,
+        let data = match preamble.record_type {
+            DNSQueryType::A => Ok(DNSRecordData::A(A::parse_from_buffer(buffer, &preamble)?)),
+            DNSQueryType::AAAA => Ok(DNSRecordData::AAAA(AAAA::parse_from_buffer(
+                buffer, &preamble,
             )?)),
-            unimplemented_qtype => Err(DNSPacketErr::UnimplementedRecordType(unimplemented_qtype)),
+            DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
+            DNSQueryType::Unknown(_) => Ok(DNSRecordData::Unknown(Unknown::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
+            ref unimplemented_qtype => Err(DNSPacketErr::UnimplementedRecordType(
+                unimplemented_qtype.clone(),
+            )),
         }?;
 
-        Ok(record)
+        Ok(DNSRecord { preamble, data })
     }
 
     pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
         }
-        match self {
-            DNSRecord::A(record) => record.write_to_buffer(buffer)?,
-            DNSRecord::AAAA(record) => record.write_to_buffer(buffer)?,
-            DNSRecord::SOA(record) => record.write_to_buffer(buffer)?,
-            DNSRecord::Unknown(record) => record.write_to_buffer(buffer)?,
-        };
+        self.preamble.write_to_buffer(buffer)?;
+        self.data.write_to_buffer(buffer)?;
         Ok(())
     }
 }
-

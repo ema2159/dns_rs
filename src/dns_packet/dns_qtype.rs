@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum DNSQueryType {
     A,            // Address record
     AAAA,         // IPv6 address record

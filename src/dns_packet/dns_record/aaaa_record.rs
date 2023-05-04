@@ -1,22 +1,19 @@
 use super::{
-    DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSRecordPreamble, DNSRecordType, HEADER_SIZE,
+    DNSPacketBuffer, DNSPacketErr, DNSRecordDataRead, DNSRecordDataWrite, DNSRecordPreamble,
 };
 use std::net::Ipv6Addr;
 
 #[derive(Debug, PartialEq)]
 pub struct AAAA {
-    pub domain: DNSDomain,
     pub addr: Ipv6Addr,
-    pub ttl: u32,
 }
 
-impl DNSRecordType for AAAA {
+impl DNSRecordDataRead for AAAA {
     fn parse_from_buffer(
         buffer: &mut DNSPacketBuffer,
-        preamble: DNSRecordPreamble,
+        _preamble: &DNSRecordPreamble,
     ) -> Result<Self, DNSPacketErr> {
         Ok(AAAA {
-            domain: preamble.domain,
             addr: Ipv6Addr::new(
                 buffer.read_u16()?,
                 buffer.read_u16()?,
@@ -27,24 +24,15 @@ impl DNSRecordType for AAAA {
                 buffer.read_u16()?,
                 buffer.read_u16()?,
             ),
-            ttl: preamble.ttl,
         })
     }
+}
 
+impl DNSRecordDataWrite for AAAA {
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
-        const RECORD_TYPE: u16 = 28;
-        const CLASS: u16 = 1;
-        const LEN: u16 = 16;
-        self.domain.write_to_buffer(buffer)?;
-        buffer.write_u16(RECORD_TYPE)?;
-        buffer.write_u16(CLASS)?;
-        buffer.write_u32(self.ttl)?;
-        buffer.write_u16(LEN)?;
-
         for octet in self.addr.octets() {
             buffer.write_u8(octet)?;
         }
-
         Ok(())
     }
 }

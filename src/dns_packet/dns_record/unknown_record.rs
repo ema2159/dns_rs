@@ -1,35 +1,24 @@
 #[cfg(test)]
 use super::PACKET_SIZE;
 use super::{
-    DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSRecordPreamble, DNSRecordType, HEADER_SIZE,
+    DNSPacketBuffer, DNSPacketErr, DNSRecordDataRead, DNSRecordDataWrite, DNSRecordPreamble,
 };
 
 #[derive(Debug, PartialEq)]
-pub struct Unknown {
-    pub domain: DNSDomain,
-    pub record_type: u16,
-    pub data_len: u16,
-    pub ttl: u32,
-}
+pub struct Unknown {}
 
-impl DNSRecordType for Unknown {
+impl DNSRecordDataRead for Unknown {
     fn parse_from_buffer(
         buffer: &mut DNSPacketBuffer,
-        preamble: DNSRecordPreamble,
+        preamble: &DNSRecordPreamble,
     ) -> Result<Self, DNSPacketErr> {
         // Skip reading package
         buffer.step(preamble.len as usize);
 
-        let record_type_num = preamble.record_type.to_num();
-
-        Ok(Unknown {
-            domain: preamble.domain,
-            record_type: record_type_num,
-            data_len: preamble.len,
-            ttl: preamble.ttl,
-        })
+        Ok(Unknown {})
     }
-
+}
+impl DNSRecordDataWrite for Unknown {
     fn write_to_buffer(&self, _buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         Err(DNSPacketErr::UnknownRecord)
     }
