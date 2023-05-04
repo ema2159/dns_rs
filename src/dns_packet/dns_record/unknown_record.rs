@@ -26,6 +26,7 @@ impl DNSRecordDataWrite for Unknown {
 
 #[cfg(test)]
 mod tests {
+    use super::super::{DNSDomain, DNSQueryType, DNSRecord, DNSRecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -39,14 +40,17 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let preamble = DNSRecordPreamble::parse_from_buffer(&mut dns_packet_buffer).unwrap();
-        let parsed_record = Unknown::parse_from_buffer(&mut dns_packet_buffer, preamble).unwrap();
+        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = Unknown {
-            domain: DNSDomain("google.com".to_string()),
-            record_type: 255,
-            data_len: 4,
-            ttl: 293,
+        let expected_record = DNSRecord {
+            preamble: DNSRecordPreamble {
+                domain: DNSDomain("google.com".to_string()),
+                record_type: DNSQueryType::Unknown(255),
+                class: 1,
+                ttl: 293,
+                len: 4,
+            },
+            data: DNSRecordData::Unknown(Unknown {}),
         };
 
         assert_eq!(parsed_record, expected_record);
@@ -54,12 +58,7 @@ mod tests {
 
     #[test]
     fn test_write_unknown() {
-        let unknown_record = Unknown {
-            domain: DNSDomain("youtube.com".to_string()),
-            record_type: 171,
-            data_len: 7,
-            ttl: 2748,
-        };
+        let unknown_record = Unknown {};
 
         let mut buffer = DNSPacketBuffer::new(&[0; PACKET_SIZE]);
         buffer.seek(HEADER_SIZE);

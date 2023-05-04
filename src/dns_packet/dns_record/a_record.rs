@@ -30,6 +30,7 @@ impl DNSRecordDataWrite for A {
 
 #[cfg(test)]
 mod tests {
+    use super::super::{DNSDomain, DNSQueryType, DNSRecord, DNSRecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -43,13 +44,19 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let preamble = DNSRecordPreamble::parse_from_buffer(&mut dns_packet_buffer).unwrap();
-        let parsed_record = A::parse_from_buffer(&mut dns_packet_buffer, preamble).unwrap();
+        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = A {
-            domain: DNSDomain("google.com".to_string()),
-            addr: Ipv4Addr::new(255, 0, 8, 15),
-            ttl: 255,
+        let expected_record = DNSRecord {
+            preamble: DNSRecordPreamble {
+                domain: DNSDomain("google.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 1,
+                ttl: 255,
+                len: 4,
+            },
+            data: DNSRecordData::A(A {
+                addr: Ipv4Addr::new(255, 0, 8, 15),
+            }),
         };
 
         assert_eq!(parsed_record, expected_record);
@@ -57,10 +64,17 @@ mod tests {
 
     #[test]
     fn test_write_a() {
-        let a_record = A {
-            domain: DNSDomain("youtube.com".to_string()),
-            addr: Ipv4Addr::new(255, 20, 28, 35),
-            ttl: 171,
+        let a_record = DNSRecord {
+            preamble: DNSRecordPreamble {
+                domain: DNSDomain("youtube.com".to_string()),
+                record_type: DNSQueryType::A,
+                class: 1,
+                ttl: 171,
+                len: 4,
+            },
+            data: DNSRecordData::A(A {
+                addr: Ipv4Addr::new(255, 20, 28, 35),
+            }),
         };
 
         let mut buffer = DNSPacketBuffer::new(&[]);

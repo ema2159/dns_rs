@@ -39,13 +39,14 @@ impl DNSRecordDataWrite for AAAA {
 
 #[cfg(test)]
 mod tests {
+    use super::super::{DNSDomain, DNSQueryType, DNSRecord, DNSRecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
     fn test_read_aaaa() {
         let dns_packet_data = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
-            0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x01, 0x00, 0x01,
+            0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0x1C, 0x00, 0x01,
             0x00, 0x00, 0x00, 0xFF, 0x00, 0x10, 0xFF, 0x00, 0x08, 0x0F, 0xAA, 0xBB, 0xCC, 0xDD,
             0xEE, 0xFF, 0x01, 0xFA, 0x23, 0x55, 0xD4, 0x88,
         ];
@@ -53,15 +54,21 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let preamble = DNSRecordPreamble::parse_from_buffer(&mut dns_packet_buffer).unwrap();
-        let parsed_record = AAAA::parse_from_buffer(&mut dns_packet_buffer, preamble).unwrap();
+        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = AAAA {
-            domain: DNSDomain("google.com".to_string()),
-            addr: Ipv6Addr::new(
-                0xFF00, 0x080F, 0xAABB, 0xCCDD, 0xEEFF, 0x01FA, 0x2355, 0xD488,
-            ),
-            ttl: 255,
+        let expected_record = DNSRecord {
+            preamble: DNSRecordPreamble {
+                domain: DNSDomain("google.com".to_string()),
+                record_type: DNSQueryType::AAAA,
+                class: 1,
+                ttl: 255,
+                len: 16,
+            },
+            data: DNSRecordData::AAAA(AAAA {
+                addr: Ipv6Addr::new(
+                    0xFF00, 0x080F, 0xAABB, 0xCCDD, 0xEEFF, 0x01FA, 0x2355, 0xD488,
+                ),
+            }),
         };
 
         assert_eq!(parsed_record, expected_record);
@@ -69,12 +76,19 @@ mod tests {
 
     #[test]
     fn test_write_aaaa() {
-        let aaaa_record = AAAA {
-            domain: DNSDomain("youtube.com".to_string()),
-            addr: Ipv6Addr::new(
-                0x080F, 0xFF00, 0xCCDD, 0xAABB, 0x01FA, 0xEEFF, 0xD488, 0x2355,
-            ),
-            ttl: 171,
+        let aaaa_record = DNSRecord {
+            preamble: DNSRecordPreamble {
+                domain: DNSDomain("youtube.com".to_string()),
+                record_type: DNSQueryType::AAAA,
+                class: 1,
+                ttl: 171,
+                len: 16,
+            },
+            data: DNSRecordData::AAAA(AAAA {
+                addr: Ipv6Addr::new(
+                    0x080F, 0xFF00, 0xCCDD, 0xAABB, 0x01FA, 0xEEFF, 0xD488, 0x2355,
+                ),
+            }),
         };
 
         let mut buffer = DNSPacketBuffer::new(&[]);
