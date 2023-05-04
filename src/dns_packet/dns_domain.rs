@@ -1,14 +1,16 @@
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 
-
 #[derive(Debug, PartialEq)]
 pub struct DNSDomain(pub String);
 
 impl DNSDomain {
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last label.
-    pub(crate) fn parse_domain(buffer: &mut DNSPacketBuffer, jump: u8) -> Result<DNSDomain, DNSPacketErr> {
+    pub(crate) fn parse_domain(
+        buffer: &mut DNSPacketBuffer,
+        jump: u8,
+    ) -> Result<DNSDomain, DNSPacketErr> {
         const MAX_JUMPS: u8 = 5;
         if jump == MAX_JUMPS {
             return Err(DNSPacketErr::MaxJumps);

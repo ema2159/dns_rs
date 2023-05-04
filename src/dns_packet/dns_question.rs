@@ -4,7 +4,6 @@ use super::DNSPacketErr;
 use super::DNSQueryType;
 use super::HEADER_SIZE;
 
-
 #[derive(Debug, PartialEq)]
 pub struct DNSQuestion {
     pub domain: DNSDomain,         // Variable length
