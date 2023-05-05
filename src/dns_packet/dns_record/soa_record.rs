@@ -1,5 +1,5 @@
 use super::{
-    DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSRecordDataRead, DNSRecordDataWrite,
+    DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
     DNSRecordPreamble,
 };
 
@@ -41,5 +41,9 @@ impl DNSRecordDataWrite for SOA {
         buffer.write_u32(self.expire)?;
         buffer.write_u32(self.minttl)?;
         Ok(())
+    }
+
+    fn query_type(&self) -> DNSQueryType {
+        DNSQueryType::SOA
     }
 }

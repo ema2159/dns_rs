@@ -1,5 +1,6 @@
 use super::{
-    DNSPacketBuffer, DNSPacketErr, DNSRecordDataRead, DNSRecordDataWrite, DNSRecordPreamble,
+    DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
+    DNSRecordPreamble,
 };
 use std::net::Ipv6Addr;
 
@@ -34,6 +35,10 @@ impl DNSRecordDataWrite for AAAA {
             buffer.write_u8(octet)?;
         }
         Ok(())
+    }
+
+    fn query_type(&self) -> DNSQueryType {
+        DNSQueryType::AAAA
     }
 }
 

@@ -19,8 +19,8 @@ pub use unknown_record::Unknown;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSRecord {
-    pub preamble: DNSRecordPreamble,
-    pub data: DNSRecordData,
+    preamble: DNSRecordPreamble,
+    data: DNSRecordData,
 }
 
 #[enum_dispatch]
@@ -32,7 +32,7 @@ pub enum DNSRecordData {
     Unknown,
 }
 
-pub trait DNSRecordDataRead {
+trait DNSRecordDataRead {
     fn parse_from_buffer(
         buffer: &mut DNSPacketBuffer,
         preamble: &DNSRecordPreamble,
@@ -44,15 +44,16 @@ pub trait DNSRecordDataRead {
 #[enum_dispatch(DNSRecordData)]
 pub trait DNSRecordDataWrite: std::fmt::Debug {
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr>;
+    fn query_type(&self) -> DNSQueryType;
 }
 
 #[derive(Debug, PartialEq)]
 pub struct DNSRecordPreamble {
-    pub domain: DNSDomain,         // Variable length
-    pub record_type: DNSQueryType, // 2 bytes
-    pub class: u16,                // 2 bytes
-    pub ttl: u32,                  // 4 bytes
-    pub len: u16,                  // 2 bytes
+    domain: DNSDomain,         // Variable length
+    record_type: DNSQueryType, // 2 bytes
+    class: u16,                // 2 bytes
+    ttl: u32,                  // 4 bytes
+    len: u16,                  // 2 bytes
 }
 
 impl DNSRecordPreamble {
@@ -68,16 +69,29 @@ impl DNSRecordPreamble {
 
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         self.domain.write_to_buffer(buffer)?;
-        buffer.write_u16(self.record_type.to_num())?;
+        buffer.write_u16(0)?; // filled by record data 
         buffer.write_u16(self.class)?;
         buffer.write_u32(self.ttl)?;
-        buffer.write_u16(self.len)?;
+        buffer.write_u16(0)?; // filled by record data
 
         Ok(())
     }
 }
 
 impl DNSRecord {
+    pub fn new(domain: DNSDomain, class: u16, ttl: u32, record_data: DNSRecordData) -> Self {
+        Self {
+            preamble: DNSRecordPreamble {
+                domain,
+                record_type: record_data.query_type(),
+                class,
+                ttl,
+                len: 0,
+            },
+            data: record_data,
+        }
+    }
+
     pub(crate) fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         if buffer.get_pos() < HEADER_SIZE {
             return Err(DNSPacketErr::BadPointerPosition);
@@ -100,7 +114,7 @@ impl DNSRecord {
             )),
         }?;
 
-        Ok(DNSRecord { preamble, data })
+        Ok(Self { preamble, data })
     }
 
     pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {

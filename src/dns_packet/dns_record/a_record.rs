@@ -1,5 +1,6 @@
 use super::{
-    DNSPacketBuffer, DNSPacketErr, DNSRecordDataRead, DNSRecordDataWrite, DNSRecordPreamble,
+    DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
+    DNSRecordPreamble,
 };
 use std::net::Ipv4Addr;
 
@@ -25,6 +26,10 @@ impl DNSRecordDataWrite for A {
             buffer.write_u8(octet)?;
         }
         Ok(())
+    }
+
+    fn query_type(&self) -> DNSQueryType {
+        DNSQueryType::A
     }
 }
 

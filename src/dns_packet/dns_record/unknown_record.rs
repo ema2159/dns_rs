@@ -1,7 +1,8 @@
 #[cfg(test)]
 use super::PACKET_SIZE;
 use super::{
-    DNSPacketBuffer, DNSPacketErr, DNSRecordDataRead, DNSRecordDataWrite, DNSRecordPreamble,
+    DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
+    DNSRecordPreamble,
 };
 
 #[derive(Debug, PartialEq)]
@@ -21,6 +22,10 @@ impl DNSRecordDataRead for Unknown {
 impl DNSRecordDataWrite for Unknown {
     fn write_to_buffer(&self, _buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         Err(DNSPacketErr::UnknownRecord)
+    }
+
+    fn query_type(&self) -> DNSQueryType {
+        DNSQueryType::Unknown(00)
     }
 }
 
