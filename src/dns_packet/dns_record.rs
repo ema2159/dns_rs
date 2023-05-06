@@ -69,7 +69,7 @@ impl DNSRecordPreamble {
 
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
         self.domain.write_to_buffer(buffer)?;
-        buffer.write_u16(0)?; // filled by record data 
+        buffer.write_u16(self.record_type.to_num())?; // filled by record data
         buffer.write_u16(self.class)?;
         buffer.write_u32(self.ttl)?;
         buffer.write_u16(0)?; // filled by record data

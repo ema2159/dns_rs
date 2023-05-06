@@ -22,6 +22,10 @@ impl DNSRecordDataRead for A {
 
 impl DNSRecordDataWrite for A {
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        let len_field = buffer.get_pos() - 2;
+        const A_RECORD_LEN: u16 = 4;
+        buffer.set_u16(len_field, A_RECORD_LEN)?;
+
         for octet in self.addr.octets() {
             buffer.write_u8(octet)?;
         }

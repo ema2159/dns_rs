@@ -132,6 +132,15 @@ impl DNSPacketBuffer {
         Ok(())
     }
 
+    /// Writes two bytes at specified position. Keep position pointer in place.
+    pub(crate) fn set_u16(&mut self, pos: usize, val: u16) -> Result<(), DNSPacketErr> {
+        let curr_pos = self.get_pos();
+        self.seek(pos);
+        self.write_u16(val)?;
+        self.seek(curr_pos);
+        Ok(())
+    }
+
     // NOTE: Label caching for DNS compression
 
     /// Insert label sequence into buffer lookup cache.

@@ -6,7 +6,9 @@ use super::{
 };
 
 #[derive(Debug, PartialEq)]
-pub struct Unknown {}
+pub struct Unknown {
+    code: u16,
+}
 
 impl DNSRecordDataRead for Unknown {
     fn parse_from_buffer(
@@ -16,7 +18,9 @@ impl DNSRecordDataRead for Unknown {
         // Skip reading package
         buffer.step(preamble.len as usize);
 
-        Ok(Unknown {})
+        Ok(Unknown {
+            code: preamble.record_type.to_num(),
+        })
     }
 }
 impl DNSRecordDataWrite for Unknown {
@@ -25,7 +29,7 @@ impl DNSRecordDataWrite for Unknown {
     }
 
     fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::Unknown(00)
+        DNSQueryType::Unknown(self.code)
     }
 }
 
