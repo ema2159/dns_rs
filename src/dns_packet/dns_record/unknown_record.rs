@@ -35,7 +35,7 @@ impl DNSRecordDataWrite for Unknown {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DNSDomain, DNSQueryType, DNSRecord, DNSRecordData, HEADER_SIZE};
+    use super::super::{DNSDomain, DNSRecord, DNSRecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -51,23 +51,20 @@ mod tests {
 
         let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = DNSRecord {
-            preamble: DNSRecordPreamble {
-                domain: DNSDomain("google.com".to_string()),
-                record_type: DNSQueryType::Unknown(255),
-                class: 1,
-                ttl: 293,
-                len: 4,
-            },
-            data: DNSRecordData::Unknown(Unknown {}),
-        };
+        let mut expected_record = DNSRecord::new(
+            DNSDomain("google.com".to_string()),
+            1,
+            293,
+            DNSRecordData::Unknown(Unknown { code: 255 }),
+        );
+        expected_record.preamble.len = 4;
 
         assert_eq!(parsed_record, expected_record);
     }
 
     #[test]
     fn test_write_unknown() {
-        let unknown_record = Unknown {};
+        let unknown_record = Unknown { code: 0 };
 
         let mut buffer = DNSPacketBuffer::new(&[0; PACKET_SIZE]);
         buffer.seek(HEADER_SIZE);
