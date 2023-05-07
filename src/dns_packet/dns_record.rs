@@ -1,5 +1,6 @@
 mod a_record;
 mod aaaa_record;
+mod cname_record;
 mod soa_record;
 mod unknown_record;
 use super::DNSDomain;
@@ -14,6 +15,7 @@ use enum_dispatch::enum_dispatch;
 
 pub use a_record::A;
 pub use aaaa_record::AAAA;
+pub use cname_record::CNAME;
 pub use soa_record::SOA;
 pub use unknown_record::Unknown;
 
@@ -37,6 +39,7 @@ impl PartialEq for DNSRecord {
 pub enum DNSRecordData {
     A,
     AAAA,
+    CNAME,
     SOA,
     Unknown,
 }
@@ -113,6 +116,9 @@ impl DNSRecord {
                 buffer, &preamble,
             )?)),
             DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
+            DNSQueryType::CNAME => Ok(DNSRecordData::CNAME(CNAME::parse_from_buffer(
                 buffer, &preamble,
             )?)),
             DNSQueryType::Unknown(_) => Ok(DNSRecordData::Unknown(Unknown::parse_from_buffer(
