@@ -250,18 +250,14 @@ mod tests {
             class: 0x01,
         }];
 
-        let expected_answers = vec![DNSRecord {
-            preamble: DNSRecordPreamble {
-                domain: DNSDomain("google.com".to_string()),
-                record_type: DNSQueryType::A,
-                class: 1,
-                ttl: 293,
-                len: 4,
-            },
-            data: DNSRecordData::A(A {
+        let expected_answers = vec![DNSRecord::new(
+            DNSDomain("google.com".to_string()),
+            1,
+            293,
+            DNSRecordData::A(A {
                 addr: Ipv4Addr::new(216, 58, 211, 142),
             }),
-        }];
+        )];
 
         let expected_authorities = Vec::<DNSRecord>::new();
         let expected_additional_records = Vec::<DNSRecord>::new();
@@ -315,28 +311,20 @@ mod tests {
         }];
 
         let expected_answers = vec![
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("google.com".to_string()),
-                    record_type: DNSQueryType::Unknown(255),
-                    class: 1,
-                    ttl: 293,
-                    len: 4,
-                },
-                data: DNSRecordData::Unknown(Unknown {}),
-            },
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("google.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 293,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            DNSRecord::new(
+                DNSDomain("google.com".to_string()),
+                1,
+                293,
+                DNSRecordData::Unknown(Unknown { code: 255 }),
+            ),
+            DNSRecord::new(
+                DNSDomain("google.com".to_string()),
+                1,
+                293,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
-            },
+            ),
         ];
 
         let expected_authorities = Vec::<DNSRecord>::new();
@@ -402,84 +390,60 @@ mod tests {
         ];
 
         let original_answers = vec![
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("api.dev.google.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 342,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            DNSRecord::new (
+                    DNSDomain("api.dev.google.com".to_string()),
+                    1,
+                    342,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(16, 28, 21, 42),
                 }),
-            },
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("yahoo.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 272,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            ),
+            DNSRecord::new (
+                    DNSDomain("yahoo.com".to_string()),
+                    1,
+                    272,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
-            },
+            ),
         ];
 
         let original_authorities = vec![
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("api.dev.yahoo.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 278,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            DNSRecord::new (
+                    DNSDomain("api.dev.yahoo.com".to_string()),
+                    1,
+                    278,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(116, 253, 244, 2),
                 }),
-            },
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("yahoo.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 22,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            ),
+            DNSRecord::new (
+                    DNSDomain("yahoo.com".to_string()),
+                    1,
+                    22,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(255, 244, 233, 222),
                 }),
-            },
+            ),
         ];
 
         let original_additional_records = vec![
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("google.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 93,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            DNSRecord::new (
+                    DNSDomain("google.com".to_string()),
+                    1,
+                    93,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
-            },
-            DNSRecord {
-                preamble: DNSRecordPreamble {
-                    domain: DNSDomain("api.google.com".to_string()),
-                    record_type: DNSQueryType::A,
-                    class: 1,
-                    ttl: 93,
-                    len: 4,
-                },
-                data: DNSRecordData::A(A {
+            ),
+            DNSRecord::new (
+                    DNSDomain("api.google.com".to_string()),
+                    1,
+                    93,
+                DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
-            },
+            ),
         ];
 
         let original_packet = DNSPacket::new(
