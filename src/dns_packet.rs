@@ -390,18 +390,18 @@ mod tests {
         ];
 
         let original_answers = vec![
-            DNSRecord::new (
-                    DNSDomain("api.dev.google.com".to_string()),
-                    1,
-                    342,
+            DNSRecord::new(
+                DNSDomain("api.dev.google.com".to_string()),
+                1,
+                342,
                 DNSRecordData::A(A {
                     addr: Ipv4Addr::new(16, 28, 21, 42),
                 }),
             ),
-            DNSRecord::new (
-                    DNSDomain("yahoo.com".to_string()),
-                    1,
-                    272,
+            DNSRecord::new(
+                DNSDomain("yahoo.com".to_string()),
+                1,
+                272,
                 DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
@@ -409,18 +409,18 @@ mod tests {
         ];
 
         let original_authorities = vec![
-            DNSRecord::new (
-                    DNSDomain("api.dev.yahoo.com".to_string()),
-                    1,
-                    278,
+            DNSRecord::new(
+                DNSDomain("api.dev.yahoo.com".to_string()),
+                1,
+                278,
                 DNSRecordData::A(A {
                     addr: Ipv4Addr::new(116, 253, 244, 2),
                 }),
             ),
-            DNSRecord::new (
-                    DNSDomain("yahoo.com".to_string()),
-                    1,
-                    22,
+            DNSRecord::new(
+                DNSDomain("yahoo.com".to_string()),
+                1,
+                22,
                 DNSRecordData::A(A {
                     addr: Ipv4Addr::new(255, 244, 233, 222),
                 }),
@@ -428,18 +428,18 @@ mod tests {
         ];
 
         let original_additional_records = vec![
-            DNSRecord::new (
-                    DNSDomain("google.com".to_string()),
-                    1,
-                    93,
+            DNSRecord::new(
+                DNSDomain("google.com".to_string()),
+                1,
+                93,
                 DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
             ),
-            DNSRecord::new (
-                    DNSDomain("api.google.com".to_string()),
-                    1,
-                    93,
+            DNSRecord::new(
+                DNSDomain("api.google.com".to_string()),
+                1,
+                93,
                 DNSRecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
