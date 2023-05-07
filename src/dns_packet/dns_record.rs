@@ -45,10 +45,7 @@ pub enum DNSRecordData {
 }
 
 trait DNSRecordDataRead {
-    fn parse_from_buffer(
-        buffer: &mut DNSPacketBuffer,
-        preamble: &DNSRecordPreamble,
-    ) -> Result<Self, DNSPacketErr>
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr>
     where
         Self: Sized;
 }
@@ -111,19 +108,15 @@ impl DNSRecord {
 
         let preamble = DNSRecordPreamble::parse_from_buffer(buffer)?;
         let data = match preamble.record_type {
-            DNSQueryType::A => Ok(DNSRecordData::A(A::parse_from_buffer(buffer, &preamble)?)),
-            DNSQueryType::AAAA => Ok(DNSRecordData::AAAA(AAAA::parse_from_buffer(
-                buffer, &preamble,
-            )?)),
-            DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(
-                buffer, &preamble,
-            )?)),
-            DNSQueryType::CNAME => Ok(DNSRecordData::CNAME(CNAME::parse_from_buffer(
-                buffer, &preamble,
-            )?)),
-            DNSQueryType::Unknown(_) => Ok(DNSRecordData::Unknown(Unknown::parse_from_buffer(
-                buffer, &preamble,
-            )?)),
+            DNSQueryType::A => Ok(DNSRecordData::A(A::parse_from_buffer(buffer)?)),
+            DNSQueryType::AAAA => Ok(DNSRecordData::AAAA(AAAA::parse_from_buffer(buffer)?)),
+            DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(buffer)?)),
+            DNSQueryType::CNAME => Ok(DNSRecordData::CNAME(CNAME::parse_from_buffer(buffer)?)),
+            DNSQueryType::Unknown(_) => {
+                // Skip reading package
+                buffer.step(preamble.len as usize);
+                Ok(DNSRecordData::Unknown(Unknown::parse_from_buffer(buffer)?))
+            }
             ref unimplemented_qtype => Err(DNSPacketErr::UnimplementedRecordType(
                 unimplemented_qtype.clone(),
             )),

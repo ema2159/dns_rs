@@ -1,7 +1,4 @@
-use super::{
-    DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
-    DNSRecordPreamble,
-};
+use super::{DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite};
 use std::net::Ipv4Addr;
 
 #[derive(Debug, PartialEq)]
@@ -10,10 +7,7 @@ pub struct A {
 }
 
 impl DNSRecordDataRead for A {
-    fn parse_from_buffer(
-        buffer: &mut DNSPacketBuffer,
-        _preamble: &DNSRecordPreamble,
-    ) -> Result<Self, DNSPacketErr> {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         Ok(A {
             addr: Ipv4Addr::from(buffer.read_u32()?),
         })

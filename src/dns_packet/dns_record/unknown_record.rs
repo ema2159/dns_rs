@@ -1,26 +1,13 @@
 #[cfg(test)]
 use super::PACKET_SIZE;
-use super::{
-    DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
-    DNSRecordPreamble,
-};
+use super::{DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite};
 
 #[derive(Debug, PartialEq)]
-pub struct Unknown {
-    pub code: u16,
-}
+pub struct Unknown {}
 
 impl DNSRecordDataRead for Unknown {
-    fn parse_from_buffer(
-        buffer: &mut DNSPacketBuffer,
-        preamble: &DNSRecordPreamble,
-    ) -> Result<Self, DNSPacketErr> {
-        // Skip reading package
-        buffer.step(preamble.len as usize);
-
-        Ok(Unknown {
-            code: preamble.record_type.to_num(),
-        })
+    fn parse_from_buffer(_buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+        Ok(Unknown {})
     }
 }
 impl DNSRecordDataWrite for Unknown {
@@ -29,7 +16,7 @@ impl DNSRecordDataWrite for Unknown {
     }
 
     fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::Unknown(self.code)
+        DNSQueryType::Unknown(0)
     }
 }
 
@@ -55,16 +42,20 @@ mod tests {
             DNSDomain("google.com".to_string()),
             1,
             293,
-            DNSRecordData::Unknown(Unknown { code: 255 }),
+            DNSRecordData::Unknown(Unknown {}),
         );
 
         assert_eq!(parsed_record.preamble.len, 5);
+        assert_eq!(
+            parsed_record.preamble.record_type,
+            DNSQueryType::Unknown(255)
+        );
         assert_eq!(parsed_record, expected_record);
     }
 
     #[test]
     fn test_write_unknown() {
-        let unknown_record = Unknown { code: 0 };
+        let unknown_record = Unknown {};
 
         let mut buffer = DNSPacketBuffer::new(&[0; PACKET_SIZE]);
         buffer.seek(HEADER_SIZE);

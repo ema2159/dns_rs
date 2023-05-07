@@ -1,6 +1,5 @@
 use super::{
     DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
-    DNSRecordPreamble,
 };
 
 #[derive(Debug, PartialEq)]
@@ -9,10 +8,7 @@ pub struct CNAME {
 }
 
 impl DNSRecordDataRead for CNAME {
-    fn parse_from_buffer(
-        buffer: &mut DNSPacketBuffer,
-        _preamble: &DNSRecordPreamble,
-    ) -> Result<Self, DNSPacketErr> {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         Ok(CNAME {
             value: DNSDomain::parse_domain(buffer, 0)?,
         })

@@ -315,7 +315,7 @@ mod tests {
                 DNSDomain("google.com".to_string()),
                 1,
                 293,
-                DNSRecordData::Unknown(Unknown { code: 255 }),
+                DNSRecordData::Unknown(Unknown {}),
             ),
             DNSRecord::new(
                 DNSDomain("google.com".to_string()),
