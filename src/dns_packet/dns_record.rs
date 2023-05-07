@@ -17,10 +17,19 @@ pub use aaaa_record::AAAA;
 pub use soa_record::SOA;
 pub use unknown_record::Unknown;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct DNSRecord {
     preamble: DNSRecordPreamble,
     data: DNSRecordData,
+}
+
+impl PartialEq for DNSRecord {
+    fn eq(&self, other: &Self) -> bool {
+        self.preamble.domain == other.preamble.domain
+            && self.preamble.class == other.preamble.class
+            && self.preamble.ttl == other.preamble.ttl
+            && self.data == other.data
+    }
 }
 
 #[enum_dispatch]
