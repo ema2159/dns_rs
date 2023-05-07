@@ -55,7 +55,7 @@ mod tests {
 
         let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let mut expected_record = DNSRecord::new(
+        let expected_record = DNSRecord::new(
             DNSDomain("google.com".to_string()),
             1,
             255,
@@ -63,8 +63,8 @@ mod tests {
                 addr: Ipv4Addr::new(255, 0, 8, 15),
             }),
         );
-        expected_record.preamble.len = 4;
 
+        assert_eq!(parsed_record.preamble.len, 4);
         assert_eq!(parsed_record, expected_record);
     }
 

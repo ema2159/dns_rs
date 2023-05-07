@@ -7,7 +7,7 @@ use super::{
 
 #[derive(Debug, PartialEq)]
 pub struct Unknown {
-    code: u16,
+    pub code: u16,
 }
 
 impl DNSRecordDataRead for Unknown {
@@ -43,7 +43,7 @@ mod tests {
         let dns_packet_data = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x67,
             0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00, 0x00, 0xFF, 0x00, 0x01,
-            0x00, 0x00, 0x01, 0x25, 0x00, 0x04, 0xFF, 0xFF, 0xFF, 0xFF,
+            0x00, 0x00, 0x01, 0x25, 0x00, 0x05, 0xFF, 0xFF, 0xFF, 0xFF,
         ];
 
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
@@ -51,14 +51,14 @@ mod tests {
 
         let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let mut expected_record = DNSRecord::new(
+        let expected_record = DNSRecord::new(
             DNSDomain("google.com".to_string()),
             1,
             293,
             DNSRecordData::Unknown(Unknown { code: 255 }),
         );
-        expected_record.preamble.len = 4;
 
+        assert_eq!(parsed_record.preamble.len, 5);
         assert_eq!(parsed_record, expected_record);
     }
 
