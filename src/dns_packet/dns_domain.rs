@@ -1,8 +1,17 @@
 use super::DNSPacketBuffer;
 use super::DNSPacketErr;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct DNSDomain(pub String);
+
+impl PartialEq for DNSDomain {
+    fn eq(&self, other: &Self) -> bool {
+        let (DNSDomain(self_str), DNSDomain(other_str)) = (self, other);
+
+        self_str.split(&['.', '@']).collect::<Vec<_>>()
+            == other_str.split(&['.', '@']).collect::<Vec<_>>()
+    }
+}
 
 impl DNSDomain {
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
@@ -76,7 +85,7 @@ impl DNSDomain {
             ));
         }
 
-        let labels_vec: Vec<&str> = domain_string.split('.').collect();
+        let labels_vec: Vec<&str> = domain_string.split(&['.', '@']).collect();
 
         let mut jumped = false;
 
