@@ -33,6 +33,9 @@ impl DNSRecordDataRead for SOA {
 
 impl DNSRecordDataWrite for SOA {
     fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+        let len_field = buffer.get_pos() - 2;
+        let starting_pos = buffer.get_pos();
+
         self.mname.write_to_buffer(buffer)?;
         self.rname.write_to_buffer(buffer)?;
         buffer.write_u32(self.serial)?;
@@ -40,6 +43,10 @@ impl DNSRecordDataWrite for SOA {
         buffer.write_u32(self.retry)?;
         buffer.write_u32(self.expire)?;
         buffer.write_u32(self.minttl)?;
+
+        let len = buffer.get_pos() - starting_pos;
+        buffer.set_u16(len_field, len as u16)?;
+
         Ok(())
     }
 
