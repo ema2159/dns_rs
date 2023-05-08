@@ -9,7 +9,7 @@ fn stub_resolver_0() {
     let google_dns_server = ("8.8.8.8", 53);
 
     let dns_query_packet = DNSPacket::new(
-        DNSHeader {
+        Header {
             id: 0x862a,
             query_response: false,
             opcode: 0,
@@ -18,15 +18,15 @@ fn stub_resolver_0() {
             recursion_desired: true,
             recursion_available: false,
             reserved: 2,
-            response_code: DNSResponseCode::NoError,
+            response_code: ResponseCode::NoError,
             question_count: 1,
             answer_count: 0,
             authority_count: 0,
             additional_count: 0,
         },
-        Some(vec![DNSQuestion {
-            domain: DNSDomain("google.com".to_string()),
-            record_type: DNSQueryType::A,
+        Some(vec![Question {
+            domain: Domain("splitkb.com".to_string()),
+            record_type: QueryType::AAAA,
             class: 0x01,
         }]),
         None,

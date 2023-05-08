@@ -1,4 +1,4 @@
-use super::{DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite};
+use super::{DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite};
 use std::net::Ipv4Addr;
 
 #[derive(Debug, PartialEq)]
@@ -6,16 +6,16 @@ pub struct A {
     pub addr: Ipv4Addr,
 }
 
-impl DNSRecordDataRead for A {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl RecordDataRead for A {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         Ok(A {
             addr: Ipv4Addr::from(buffer.read_u32()?),
         })
     }
 }
 
-impl DNSRecordDataWrite for A {
-    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+impl RecordDataWrite for A {
+    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         let len_field = buffer.get_pos() - 2;
         const A_RECORD_LEN: u16 = 4;
         buffer.set_u16(len_field, A_RECORD_LEN)?;
@@ -26,14 +26,14 @@ impl DNSRecordDataWrite for A {
         Ok(())
     }
 
-    fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::A
+    fn query_type(&self) -> QueryType {
+        QueryType::A
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DNSDomain, DNSRecord, DNSRecordData, HEADER_SIZE};
+    use super::super::{Domain, Record, RecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -47,13 +47,13 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_record = Record::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = DNSRecord::new(
-            DNSDomain("google.com".to_string()),
+        let expected_record = Record::new(
+            Domain("google.com".to_string()),
             1,
             255,
-            DNSRecordData::A(A {
+            RecordData::A(A {
                 addr: Ipv4Addr::new(255, 0, 8, 15),
             }),
         );
@@ -64,11 +64,11 @@ mod tests {
 
     #[test]
     fn test_write_a() {
-        let a_record = DNSRecord::new(
-            DNSDomain("youtube.com".to_string()),
+        let a_record = Record::new(
+            Domain("youtube.com".to_string()),
             1,
             171,
-            DNSRecordData::A(A {
+            RecordData::A(A {
                 addr: Ipv4Addr::new(255, 20, 28, 35),
             }),
         );

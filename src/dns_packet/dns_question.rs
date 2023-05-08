@@ -1,35 +1,35 @@
-use super::DNSDomain;
+use super::DNSError;
 use super::DNSPacketBuffer;
-use super::DNSPacketErr;
-use super::DNSQueryType;
+use super::Domain;
+use super::QueryType;
 use super::HEADER_SIZE;
 
 #[derive(Debug, PartialEq)]
-pub struct DNSQuestion {
-    pub domain: DNSDomain,         // Variable length
-    pub record_type: DNSQueryType, // 2 bytes
-    pub class: u16,                // 2 bytes
+pub struct Question {
+    pub domain: Domain,         // Variable length
+    pub record_type: QueryType, // 2 bytes
+    pub class: u16,             // 2 bytes
 }
 
-impl DNSQuestion {
-    pub(crate) fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl Question {
+    pub(crate) fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPosition);
+            return Err(DNSError::BadPointerPosition);
         }
 
-        let label_sequence = DNSDomain::parse_domain(buffer, 0)?;
-        let record_type = DNSQueryType::from_num(buffer.read_u16()?);
+        let label_sequence = Domain::parse_domain(buffer, 0)?;
+        let record_type = QueryType::from_num(buffer.read_u16()?);
         let class = buffer.read_u16()?;
-        Ok(DNSQuestion {
+        Ok(Question {
             domain: label_sequence,
             record_type,
             class,
         })
     }
 
-    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         if buffer.get_pos() < HEADER_SIZE {
-            return Err(DNSPacketErr::BadPointerPosition);
+            return Err(DNSError::BadPointerPosition);
         }
 
         self.domain.write_to_buffer(buffer)?;
@@ -55,18 +55,18 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let parsed_question0 = DNSQuestion::parse_from_buffer(&mut dns_packet_buffer).unwrap();
-        let parsed_question1 = DNSQuestion::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_question0 = Question::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_question1 = Question::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
         let expected_questions = vec![
-            DNSQuestion {
-                domain: DNSDomain("google.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("google.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x01,
             },
-            DNSQuestion {
-                domain: DNSDomain("yahoo.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("yahoo.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x00,
             },
         ];
@@ -77,9 +77,9 @@ mod tests {
 
     #[test]
     fn test_write_question() {
-        let question = DNSQuestion {
-            domain: DNSDomain("google.com".to_string()),
-            record_type: DNSQueryType::A,
+        let question = Question {
+            domain: Domain("google.com".to_string()),
+            record_type: QueryType::A,
             class: 0x01,
         };
 

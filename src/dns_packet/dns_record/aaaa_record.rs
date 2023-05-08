@@ -1,4 +1,4 @@
-use super::{DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite};
+use super::{DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite};
 use std::net::Ipv6Addr;
 
 #[derive(Debug, PartialEq)]
@@ -6,8 +6,8 @@ pub struct AAAA {
     pub addr: Ipv6Addr,
 }
 
-impl DNSRecordDataRead for AAAA {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl RecordDataRead for AAAA {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         Ok(AAAA {
             addr: Ipv6Addr::new(
                 buffer.read_u16()?,
@@ -23,8 +23,8 @@ impl DNSRecordDataRead for AAAA {
     }
 }
 
-impl DNSRecordDataWrite for AAAA {
-    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+impl RecordDataWrite for AAAA {
+    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         let len_field = buffer.get_pos() - 2;
         const AAAA_RECORD_LEN: u16 = 16;
         buffer.set_u16(len_field, AAAA_RECORD_LEN)?;
@@ -35,14 +35,14 @@ impl DNSRecordDataWrite for AAAA {
         Ok(())
     }
 
-    fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::AAAA
+    fn query_type(&self) -> QueryType {
+        QueryType::AAAA
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DNSDomain, DNSRecord, DNSRecordData, HEADER_SIZE};
+    use super::super::{Domain, Record, RecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -57,13 +57,13 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_record = Record::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = DNSRecord::new(
-            DNSDomain("google.com".to_string()),
+        let expected_record = Record::new(
+            Domain("google.com".to_string()),
             1,
             255,
-            DNSRecordData::AAAA(AAAA {
+            RecordData::AAAA(AAAA {
                 addr: Ipv6Addr::new(
                     0xFF00, 0x080F, 0xAABB, 0xCCDD, 0xEEFF, 0x01FA, 0x2355, 0xD488,
                 ),
@@ -76,11 +76,11 @@ mod tests {
 
     #[test]
     fn test_write_aaaa() {
-        let aaaa_record = DNSRecord::new(
-            DNSDomain("youtube.com".to_string()),
+        let aaaa_record = Record::new(
+            Domain("youtube.com".to_string()),
             1,
             171,
-            DNSRecordData::AAAA(AAAA {
+            RecordData::AAAA(AAAA {
                 addr: Ipv6Addr::new(
                     0x080F, 0xFF00, 0xCCDD, 0xAABB, 0x01FA, 0xEEFF, 0xD488, 0x2355,
                 ),

@@ -1,22 +1,20 @@
-use super::{
-    DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
-};
+use super::{DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite};
 
 #[derive(Debug, PartialEq)]
 pub struct CNAME {
-    pub cname: DNSDomain,
+    pub cname: Domain,
 }
 
-impl DNSRecordDataRead for CNAME {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl RecordDataRead for CNAME {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         Ok(CNAME {
-            cname: DNSDomain::parse_domain(buffer, 0)?,
+            cname: Domain::parse_domain(buffer, 0)?,
         })
     }
 }
 
-impl DNSRecordDataWrite for CNAME {
-    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+impl RecordDataWrite for CNAME {
+    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         let len_field = buffer.get_pos() - 2;
         let starting_pos = buffer.get_pos();
 
@@ -28,14 +26,14 @@ impl DNSRecordDataWrite for CNAME {
         Ok(())
     }
 
-    fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::CNAME
+    fn query_type(&self) -> QueryType {
+        QueryType::CNAME
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DNSDomain, DNSRecord, DNSRecordData, HEADER_SIZE};
+    use super::super::{Domain, Record, RecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -50,14 +48,14 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_record = Record::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = DNSRecord::new(
-            DNSDomain("bar.example.com".to_string()),
+        let expected_record = Record::new(
+            Domain("bar.example.com".to_string()),
             1,
             254,
-            DNSRecordData::CNAME(CNAME {
-                cname: DNSDomain("foo.example.com".to_string()),
+            RecordData::CNAME(CNAME {
+                cname: Domain("foo.example.com".to_string()),
             }),
         );
 
@@ -67,12 +65,12 @@ mod tests {
 
     #[test]
     fn test_write_cname() {
-        let a_record = DNSRecord::new(
-            DNSDomain("bar.example.com".to_string()),
+        let a_record = Record::new(
+            Domain("bar.example.com".to_string()),
             1,
             254,
-            DNSRecordData::CNAME(CNAME {
-                cname: DNSDomain("foo.example.com".to_string()),
+            RecordData::CNAME(CNAME {
+                cname: Domain("foo.example.com".to_string()),
             }),
         );
 

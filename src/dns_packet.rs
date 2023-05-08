@@ -18,21 +18,21 @@ pub const HEADER_SIZE: usize = 12;
 
 #[derive(Debug, PartialEq)]
 pub struct DNSPacket {
-    header: DNSHeader,
-    questions: Vec<DNSQuestion>,
-    answers: Vec<DNSRecord>,
-    authorities: Vec<DNSRecord>,
-    additional_records: Vec<DNSRecord>,
+    header: Header,
+    questions: Vec<Question>,
+    answers: Vec<Record>,
+    authorities: Vec<Record>,
+    additional_records: Vec<Record>,
 }
 
 impl DNSPacket {
     // NOTE: Constructor
     pub fn new(
-        header: DNSHeader,
-        questions: Option<Vec<DNSQuestion>>,
-        answers: Option<Vec<DNSRecord>>,
-        authorities: Option<Vec<DNSRecord>>,
-        additional_records: Option<Vec<DNSRecord>>,
+        header: Header,
+        questions: Option<Vec<Question>>,
+        answers: Option<Vec<Record>>,
+        authorities: Option<Vec<Record>>,
+        additional_records: Option<Vec<Record>>,
     ) -> Self {
         let questions = if let Some(questions) = questions {
             questions
@@ -67,8 +67,8 @@ impl DNSPacket {
 
     /// Parse and return DNS header from buffer. Move pointer's position to the byte after the
     /// header.
-    fn parse_header(buffer: &mut DNSPacketBuffer) -> Result<DNSHeader, DNSPacketErr> {
-        DNSHeader::parse_from_buffer(buffer)
+    fn parse_header(buffer: &mut DNSPacketBuffer) -> Result<Header, DNSError> {
+        Header::parse_from_buffer(buffer)
     }
 
     /// Parse DNS questions starting from the current buffer pointer's position. Move pointer's
@@ -76,10 +76,10 @@ impl DNSPacket {
     fn parse_questions(
         buffer: &mut DNSPacketBuffer,
         num_questions: u16,
-    ) -> Result<Vec<DNSQuestion>, DNSPacketErr> {
-        let mut questions = Vec::<DNSQuestion>::new();
+    ) -> Result<Vec<Question>, DNSError> {
+        let mut questions = Vec::<Question>::new();
         for _ in 0..num_questions {
-            questions.push(DNSQuestion::parse_from_buffer(buffer)?);
+            questions.push(Question::parse_from_buffer(buffer)?);
         }
         Ok(questions)
     }
@@ -89,16 +89,16 @@ impl DNSPacket {
     fn parse_records(
         buffer: &mut DNSPacketBuffer,
         num_records: u16,
-    ) -> Result<Vec<DNSRecord>, DNSPacketErr> {
-        let mut records = Vec::<DNSRecord>::new();
+    ) -> Result<Vec<Record>, DNSError> {
+        let mut records = Vec::<Record>::new();
         for _ in 0..num_records {
-            records.push(DNSRecord::parse_from_buffer(buffer)?);
+            records.push(Record::parse_from_buffer(buffer)?);
         }
         Ok(records)
     }
 
     /// Parse DNS packet.
-    pub fn parse_dns_packet(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+    pub fn parse_dns_packet(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         let header = Self::parse_header(buffer)?;
         let questions = Self::parse_questions(buffer, header.question_count)?;
         let answers = Self::parse_records(buffer, header.answer_count)?;
@@ -117,9 +117,9 @@ impl DNSPacket {
 
     /// Write DNS questions to packet buffer.
     fn write_questions(
-        questions: &[DNSQuestion],
+        questions: &[Question],
         buffer: &mut DNSPacketBuffer,
-    ) -> Result<(), DNSPacketErr> {
+    ) -> Result<(), DNSError> {
         for question in questions.iter() {
             question.write_to_buffer(buffer)?;
         }
@@ -128,10 +128,7 @@ impl DNSPacket {
     }
 
     /// Write DNS records in packet struct to buffer.
-    fn write_records(
-        records: &[DNSRecord],
-        buffer: &mut DNSPacketBuffer,
-    ) -> Result<(), DNSPacketErr> {
+    fn write_records(records: &[Record], buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         for record in records.iter() {
             record.write_to_buffer(buffer)?;
         }
@@ -140,7 +137,7 @@ impl DNSPacket {
     }
 
     /// Write DNS packet.
-    pub fn write_dns_packet(&self) -> Result<DNSPacketBuffer, DNSPacketErr> {
+    pub fn write_dns_packet(&self) -> Result<DNSPacketBuffer, DNSError> {
         let mut buffer = DNSPacketBuffer::new(&[0; PACKET_SIZE]);
 
         self.header.write_to_buffer(&mut buffer)?;
@@ -170,7 +167,7 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
-        let expected_header = DNSHeader {
+        let expected_header = Header {
             id: 0x862a,
             query_response: false,
             opcode: 0,
@@ -179,7 +176,7 @@ mod tests {
             recursion_desired: true,
             recursion_available: false,
             reserved: 2,
-            response_code: DNSResponseCode::NoError,
+            response_code: ResponseCode::NoError,
             question_count: 2,
             answer_count: 0,
             authority_count: 0,
@@ -187,21 +184,21 @@ mod tests {
         };
 
         let expected_questions = vec![
-            DNSQuestion {
-                domain: DNSDomain("google.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("google.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x01,
             },
-            DNSQuestion {
-                domain: DNSDomain("yahoo.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("yahoo.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x00,
             },
         ];
 
-        let expected_answers = Vec::<DNSRecord>::new();
-        let expected_authorities = Vec::<DNSRecord>::new();
-        let expected_additional_records = Vec::<DNSRecord>::new();
+        let expected_answers = Vec::<Record>::new();
+        let expected_authorities = Vec::<Record>::new();
+        let expected_additional_records = Vec::<Record>::new();
 
         let expected_packet = DNSPacket {
             header: expected_header,
@@ -228,7 +225,7 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
-        let expected_header = DNSHeader {
+        let expected_header = Header {
             id: 0x862a,
             query_response: true,
             opcode: 0,
@@ -237,30 +234,30 @@ mod tests {
             recursion_desired: true,
             recursion_available: true,
             reserved: 0,
-            response_code: DNSResponseCode::NoError,
+            response_code: ResponseCode::NoError,
             question_count: 1,
             answer_count: 1,
             authority_count: 0,
             additional_count: 0,
         };
 
-        let expected_questions = vec![DNSQuestion {
-            domain: DNSDomain("google.com".to_string()),
-            record_type: DNSQueryType::A,
+        let expected_questions = vec![Question {
+            domain: Domain("google.com".to_string()),
+            record_type: QueryType::A,
             class: 0x01,
         }];
 
-        let expected_answers = vec![DNSRecord::new(
-            DNSDomain("google.com".to_string()),
+        let expected_answers = vec![Record::new(
+            Domain("google.com".to_string()),
             1,
             293,
-            DNSRecordData::A(A {
+            RecordData::A(A {
                 addr: Ipv4Addr::new(216, 58, 211, 142),
             }),
         )];
 
-        let expected_authorities = Vec::<DNSRecord>::new();
-        let expected_additional_records = Vec::<DNSRecord>::new();
+        let expected_authorities = Vec::<Record>::new();
+        let expected_additional_records = Vec::<Record>::new();
 
         let expected_packet = DNSPacket {
             header: expected_header,
@@ -288,7 +285,7 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         let parsed_dns_packet = DNSPacket::parse_dns_packet(&mut dns_packet_buffer).unwrap();
 
-        let expected_header = DNSHeader {
+        let expected_header = Header {
             id: 0x862a,
             query_response: true,
             opcode: 0,
@@ -297,38 +294,38 @@ mod tests {
             recursion_desired: true,
             recursion_available: true,
             reserved: 0,
-            response_code: DNSResponseCode::NoError,
+            response_code: ResponseCode::NoError,
             question_count: 1,
             answer_count: 2,
             authority_count: 0,
             additional_count: 0,
         };
 
-        let expected_questions = vec![DNSQuestion {
-            domain: DNSDomain("google.com".to_string()),
-            record_type: DNSQueryType::A,
+        let expected_questions = vec![Question {
+            domain: Domain("google.com".to_string()),
+            record_type: QueryType::A,
             class: 0x01,
         }];
 
         let expected_answers = vec![
-            DNSRecord::new(
-                DNSDomain("google.com".to_string()),
+            Record::new(
+                Domain("google.com".to_string()),
                 1,
                 293,
-                DNSRecordData::Unknown(Unknown {}),
+                RecordData::Unknown(Unknown {}),
             ),
-            DNSRecord::new(
-                DNSDomain("google.com".to_string()),
+            Record::new(
+                Domain("google.com".to_string()),
                 1,
                 293,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
             ),
         ];
 
-        let expected_authorities = Vec::<DNSRecord>::new();
-        let expected_additional_records = Vec::<DNSRecord>::new();
+        let expected_authorities = Vec::<Record>::new();
+        let expected_additional_records = Vec::<Record>::new();
 
         let expected_packet = DNSPacket {
             header: expected_header,
@@ -345,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_write_read_0() {
-        let original_header = DNSHeader {
+        let original_header = Header {
             id: 0x862a,
             query_response: false,
             opcode: 0,
@@ -354,7 +351,7 @@ mod tests {
             recursion_desired: true,
             recursion_available: false,
             reserved: 2,
-            response_code: DNSResponseCode::NoError,
+            response_code: ResponseCode::NoError,
             question_count: 5,
             answer_count: 2,
             authority_count: 2,
@@ -362,85 +359,85 @@ mod tests {
         };
 
         let original_questions = vec![
-            DNSQuestion {
-                domain: DNSDomain("google.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("google.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x01,
             },
-            DNSQuestion {
-                domain: DNSDomain("yahoo.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("yahoo.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x00,
             },
-            DNSQuestion {
-                domain: DNSDomain("dev.google.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("dev.google.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x01,
             },
-            DNSQuestion {
-                domain: DNSDomain("api.dev.google.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("api.dev.google.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x00,
             },
-            DNSQuestion {
-                domain: DNSDomain("dev.yahoo.com".to_string()),
-                record_type: DNSQueryType::A,
+            Question {
+                domain: Domain("dev.yahoo.com".to_string()),
+                record_type: QueryType::A,
                 class: 0x01,
             },
         ];
 
         let original_answers = vec![
-            DNSRecord::new(
-                DNSDomain("api.dev.google.com".to_string()),
+            Record::new(
+                Domain("api.dev.google.com".to_string()),
                 1,
                 342,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(16, 28, 21, 42),
                 }),
             ),
-            DNSRecord::new(
-                DNSDomain("yahoo.com".to_string()),
+            Record::new(
+                Domain("yahoo.com".to_string()),
                 1,
                 272,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
             ),
         ];
 
         let original_authorities = vec![
-            DNSRecord::new(
-                DNSDomain("api.dev.yahoo.com".to_string()),
+            Record::new(
+                Domain("api.dev.yahoo.com".to_string()),
                 1,
                 278,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(116, 253, 244, 2),
                 }),
             ),
-            DNSRecord::new(
-                DNSDomain("yahoo.com".to_string()),
+            Record::new(
+                Domain("yahoo.com".to_string()),
                 1,
                 22,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(255, 244, 233, 222),
                 }),
             ),
         ];
 
         let original_additional_records = vec![
-            DNSRecord::new(
-                DNSDomain("google.com".to_string()),
+            Record::new(
+                Domain("google.com".to_string()),
                 1,
                 93,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
             ),
-            DNSRecord::new(
-                DNSDomain("api.google.com".to_string()),
+            Record::new(
+                Domain("api.google.com".to_string()),
                 1,
                 93,
-                DNSRecordData::A(A {
+                RecordData::A(A {
                     addr: Ipv4Addr::new(216, 58, 211, 142),
                 }),
             ),

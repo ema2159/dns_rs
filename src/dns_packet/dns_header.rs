@@ -1,10 +1,10 @@
+use super::DNSError;
 use super::DNSPacketBuffer;
-use super::DNSPacketErr;
 #[cfg(test)]
 use super::{HEADER_SIZE, PACKET_SIZE};
 
 #[derive(Debug, PartialEq)]
-pub enum DNSResponseCode {
+pub enum ResponseCode {
     NoError,
     FormErr,
     ServFail,
@@ -17,7 +17,7 @@ pub enum DNSResponseCode {
     NotZone,
 }
 
-impl DNSResponseCode {
+impl ResponseCode {
     fn to_num(&self) -> u8 {
         match self {
             Self::NoError => 0,
@@ -32,7 +32,7 @@ impl DNSResponseCode {
             Self::NotZone => 9,
         }
     }
-    fn from_num(code_num: u8) -> Result<DNSResponseCode, DNSPacketErr> {
+    fn from_num(code_num: u8) -> Result<ResponseCode, DNSError> {
         match code_num {
             0 => Ok(Self::NoError),
             1 => Ok(Self::FormErr),
@@ -44,32 +44,32 @@ impl DNSResponseCode {
             7 => Ok(Self::XRRset),
             8 => Ok(Self::NoAuth),
             9 => Ok(Self::NotZone),
-            _ => Err(DNSPacketErr::UnknownResponseCode(code_num)),
+            _ => Err(DNSError::UnknownResponseCode(code_num)),
         }
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub struct DNSHeader {
-    pub id: u16,                        // 2 bytes
-    pub query_response: bool,           // 1 bit
-    pub opcode: u8,                     // 4 bits
-    pub authoritative_answer: bool,     // 1 bit
-    pub truncated_message: bool,        // 1 bit
-    pub recursion_desired: bool,        // 1 bit
-    pub recursion_available: bool,      // 1 bit
-    pub reserved: u8,                   // 3 bits
-    pub response_code: DNSResponseCode, // 4 bits
-    pub question_count: u16,            // 2 bytes
-    pub answer_count: u16,              // 2 bytes
-    pub authority_count: u16,           // 2 bytes
-    pub additional_count: u16,          // 2 bytes
+pub struct Header {
+    pub id: u16,                     // 2 bytes
+    pub query_response: bool,        // 1 bit
+    pub opcode: u8,                  // 4 bits
+    pub authoritative_answer: bool,  // 1 bit
+    pub truncated_message: bool,     // 1 bit
+    pub recursion_desired: bool,     // 1 bit
+    pub recursion_available: bool,   // 1 bit
+    pub reserved: u8,                // 3 bits
+    pub response_code: ResponseCode, // 4 bits
+    pub question_count: u16,         // 2 bytes
+    pub answer_count: u16,           // 2 bytes
+    pub authority_count: u16,        // 2 bytes
+    pub additional_count: u16,       // 2 bytes
 }
 
-impl DNSHeader {
-    pub(crate) fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl Header {
+    pub(crate) fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         if buffer.get_pos() != 0 {
-            return Err(DNSPacketErr::BadPointerPosition);
+            return Err(DNSError::BadPointerPosition);
         }
 
         let id = buffer.read_u16()?;
@@ -84,14 +84,14 @@ impl DNSHeader {
         next_byte = buffer.read_u8()?;
         let recursion_available = next_byte & 0b1000_0000 != 0;
         let reserved = (next_byte & 0b0111_0000) >> 4;
-        let response_code = DNSResponseCode::from_num(next_byte & 0b0000_1111)?;
+        let response_code = ResponseCode::from_num(next_byte & 0b0000_1111)?;
 
         let question_count = buffer.read_u16()?;
         let answer_count = buffer.read_u16()?;
         let authority_count = buffer.read_u16()?;
         let additional_count = buffer.read_u16()?;
 
-        Ok(DNSHeader {
+        Ok(Header {
             id,
             query_response,
             opcode,
@@ -108,9 +108,9 @@ impl DNSHeader {
         })
     }
 
-    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         if buffer.get_pos() != 0 {
-            return Err(DNSPacketErr::BadPointerPosition);
+            return Err(DNSError::BadPointerPosition);
         }
 
         // NOTE: First and second bytes
@@ -153,9 +153,9 @@ mod tests {
         ];
 
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
-        let parsed_dns_header = DNSHeader::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_dns_header = Header::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_header = DNSHeader {
+        let expected_header = Header {
             id: 0x5544,
             query_response: false,
             opcode: 15,
@@ -164,7 +164,7 @@ mod tests {
             recursion_desired: false,
             recursion_available: true,
             reserved: 7,
-            response_code: DNSResponseCode::NotZone,
+            response_code: ResponseCode::NotZone,
             question_count: 0xABCD,
             answer_count: 0xEF12,
             authority_count: 0x3456,
@@ -181,16 +181,16 @@ mod tests {
         ];
 
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
-        let parsed_dns_header = DNSHeader::parse_from_buffer(&mut dns_packet_buffer);
+        let parsed_dns_header = Header::parse_from_buffer(&mut dns_packet_buffer);
 
-        let expected = Err(DNSPacketErr::UnknownResponseCode(0xF));
+        let expected = Err(DNSError::UnknownResponseCode(0xF));
 
         assert_eq!(parsed_dns_header, expected);
     }
 
     #[test]
     fn test_write_to_buffer() {
-        let header = DNSHeader {
+        let header = Header {
             id: 0x5544,
             query_response: false,
             opcode: 15,
@@ -199,7 +199,7 @@ mod tests {
             recursion_desired: false,
             recursion_available: true,
             reserved: 7,
-            response_code: DNSResponseCode::NotZone,
+            response_code: ResponseCode::NotZone,
             question_count: 0xABCD,
             answer_count: 0xEF12,
             authority_count: 0x3456,

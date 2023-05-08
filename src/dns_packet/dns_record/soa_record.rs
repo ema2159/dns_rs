@@ -1,11 +1,9 @@
-use super::{
-    DNSDomain, DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite,
-};
+use super::{DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite};
 
 #[derive(Debug, PartialEq)]
 pub struct SOA {
-    pub mname: DNSDomain,
-    pub rname: DNSDomain,
+    pub mname: Domain,
+    pub rname: Domain,
     pub serial: u32,
     pub refresh: u32,
     pub retry: u32,
@@ -13,11 +11,11 @@ pub struct SOA {
     pub minttl: u32,
 }
 
-impl DNSRecordDataRead for SOA {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl RecordDataRead for SOA {
+    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         Ok(SOA {
-            mname: DNSDomain::parse_domain(buffer, 0)?,
-            rname: DNSDomain::parse_domain(buffer, 0)?,
+            mname: Domain::parse_domain(buffer, 0)?,
+            rname: Domain::parse_domain(buffer, 0)?,
             serial: buffer.read_u32()?,
             refresh: buffer.read_u32()?,
             retry: buffer.read_u32()?,
@@ -27,8 +25,8 @@ impl DNSRecordDataRead for SOA {
     }
 }
 
-impl DNSRecordDataWrite for SOA {
-    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+impl RecordDataWrite for SOA {
+    fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         let len_field = buffer.get_pos() - 2;
         let starting_pos = buffer.get_pos();
 
@@ -46,14 +44,14 @@ impl DNSRecordDataWrite for SOA {
         Ok(())
     }
 
-    fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::SOA
+    fn query_type(&self) -> QueryType {
+        QueryType::SOA
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DNSDomain, DNSRecord, DNSRecordData, HEADER_SIZE};
+    use super::super::{Domain, Record, RecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -73,15 +71,15 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_record = Record::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = DNSRecord::new(
-            DNSDomain("splitkb.com".to_string()),
+        let expected_record = Record::new(
+            Domain("splitkb.com".to_string()),
             1,
             3600,
-            DNSRecordData::SOA(SOA {
-                mname: DNSDomain("ns1.bdm.microsoftonline.com".to_string()),
-                rname: DNSDomain("azuredns-hostmaster@microsoft.com".to_string()),
+            RecordData::SOA(SOA {
+                mname: Domain("ns1.bdm.microsoftonline.com".to_string()),
+                rname: Domain("azuredns-hostmaster@microsoft.com".to_string()),
                 serial: 1,
                 refresh: 3600,
                 retry: 300,
@@ -96,13 +94,13 @@ mod tests {
 
     #[test]
     fn test_write_soa() {
-        let soa_record = DNSRecord::new(
-            DNSDomain("splitkb.com".to_string()),
+        let soa_record = Record::new(
+            Domain("splitkb.com".to_string()),
             1,
             3600,
-            DNSRecordData::SOA(SOA {
-                mname: DNSDomain("ns1.bdm.microsoftonline.com".to_string()),
-                rname: DNSDomain("azuredns-hostmaster@microsoft.com".to_string()),
+            RecordData::SOA(SOA {
+                mname: Domain("ns1.bdm.microsoftonline.com".to_string()),
+                rname: Domain("azuredns-hostmaster@microsoft.com".to_string()),
                 serial: 1,
                 refresh: 3600,
                 retry: 300,

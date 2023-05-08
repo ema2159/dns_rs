@@ -1,28 +1,28 @@
 #[cfg(test)]
 use super::PACKET_SIZE;
-use super::{DNSPacketBuffer, DNSPacketErr, DNSQueryType, DNSRecordDataRead, DNSRecordDataWrite};
+use super::{DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite};
 
 #[derive(Debug, PartialEq)]
 pub struct Unknown {}
 
-impl DNSRecordDataRead for Unknown {
-    fn parse_from_buffer(_buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
+impl RecordDataRead for Unknown {
+    fn parse_from_buffer(_buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
         Ok(Unknown {})
     }
 }
-impl DNSRecordDataWrite for Unknown {
-    fn write_to_buffer(&self, _buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
-        Err(DNSPacketErr::UnknownRecord)
+impl RecordDataWrite for Unknown {
+    fn write_to_buffer(&self, _buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
+        Err(DNSError::UnknownRecord)
     }
 
-    fn query_type(&self) -> DNSQueryType {
-        DNSQueryType::Unknown(0)
+    fn query_type(&self) -> QueryType {
+        QueryType::Unknown(0)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{DNSDomain, DNSRecord, DNSRecordData, HEADER_SIZE};
+    use super::super::{Domain, Record, RecordData, HEADER_SIZE};
     use super::*;
 
     #[test]
@@ -36,20 +36,17 @@ mod tests {
         let mut dns_packet_buffer = DNSPacketBuffer::new(&dns_packet_data);
         dns_packet_buffer.seek(HEADER_SIZE);
 
-        let parsed_record = DNSRecord::parse_from_buffer(&mut dns_packet_buffer).unwrap();
+        let parsed_record = Record::parse_from_buffer(&mut dns_packet_buffer).unwrap();
 
-        let expected_record = DNSRecord::new(
-            DNSDomain("google.com".to_string()),
+        let expected_record = Record::new(
+            Domain("google.com".to_string()),
             1,
             293,
-            DNSRecordData::Unknown(Unknown {}),
+            RecordData::Unknown(Unknown {}),
         );
 
         assert_eq!(parsed_record.preamble.len, 5);
-        assert_eq!(
-            parsed_record.preamble.record_type,
-            DNSQueryType::Unknown(255)
-        );
+        assert_eq!(parsed_record.preamble.record_type, QueryType::Unknown(255));
         assert_eq!(parsed_record, expected_record);
     }
 
@@ -61,7 +58,7 @@ mod tests {
         buffer.seek(HEADER_SIZE);
         let err = unknown_record.write_to_buffer(&mut buffer);
 
-        let expected_err = Err(DNSPacketErr::UnknownRecord);
+        let expected_err = Err(DNSError::UnknownRecord);
 
         assert_eq!(err, expected_err)
     }

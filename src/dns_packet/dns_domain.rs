@@ -1,28 +1,25 @@
+use super::DNSError;
 use super::DNSPacketBuffer;
-use super::DNSPacketErr;
 
 #[derive(Debug)]
-pub struct DNSDomain(pub String);
+pub struct Domain(pub String);
 
-impl PartialEq for DNSDomain {
+impl PartialEq for Domain {
     fn eq(&self, other: &Self) -> bool {
-        let (DNSDomain(self_str), DNSDomain(other_str)) = (self, other);
+        let (Domain(self_str), Domain(other_str)) = (self, other);
 
         self_str.split(&['.', '@']).collect::<Vec<_>>()
             == other_str.split(&['.', '@']).collect::<Vec<_>>()
     }
 }
 
-impl DNSDomain {
+impl Domain {
     /// Parse DNS domain name composed by labels starting from the current buffer pointer's position. Move pointer's
     /// position to the byte after the last label.
-    pub(crate) fn parse_domain(
-        buffer: &mut DNSPacketBuffer,
-        jump: u8,
-    ) -> Result<DNSDomain, DNSPacketErr> {
+    pub(crate) fn parse_domain(buffer: &mut DNSPacketBuffer, jump: u8) -> Result<Domain, DNSError> {
         const MAX_JUMPS: u8 = 5;
         if jump == MAX_JUMPS {
-            return Err(DNSPacketErr::MaxJumps);
+            return Err(DNSError::MaxJumps);
         }
 
         let mut labels_buf = Vec::<String>::new();
@@ -37,7 +34,7 @@ impl DNSDomain {
                 let next_pos = buffer.get_pos() + 2;
                 let jump_pos = buffer.read_u16()? ^ 0b1100_0000_0000_0000;
                 buffer.seek(jump_pos as usize);
-                let DNSDomain(reused_labels) = DNSDomain::parse_domain(buffer, jump + 1)?;
+                let Domain(reused_labels) = Domain::parse_domain(buffer, jump + 1)?;
                 labels_buf.push(reused_labels);
                 buffer.seek(next_pos);
                 break;
@@ -59,8 +56,8 @@ impl DNSDomain {
             }
 
             // [b'g', b'o', b'o', b'g', b'l', b'e'] -> "google"
-            let label = (String::from_utf8(label_buf).map_err(|_| DNSPacketErr::NonUTF8Label)?)
-                .to_lowercase();
+            let label =
+                (String::from_utf8(label_buf).map_err(|_| DNSError::NonUTF8Label)?).to_lowercase();
 
             // ["google"].push("com")
             labels_buf.push(label);
@@ -69,17 +66,17 @@ impl DNSDomain {
         // [google", "com"] -> "google.com"
         let label_sequence = labels_buf.join(".");
 
-        Ok(DNSDomain(label_sequence))
+        Ok(Domain(label_sequence))
     }
 
-    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_to_buffer(&self, buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
         const MAX_LABEL_SIZE: usize = 63;
         const MAX_DOMAIN_SIZE: usize = 253;
 
-        let DNSDomain(domain_string) = self;
+        let Domain(domain_string) = self;
 
         if domain_string.len() > MAX_DOMAIN_SIZE {
-            return Err(DNSPacketErr::DomainNameTooLarge(
+            return Err(DNSError::DomainNameTooLarge(
                 domain_string.clone(),
                 domain_string.len(),
             ));
@@ -99,7 +96,7 @@ impl DNSDomain {
             }
 
             if label.len() > MAX_LABEL_SIZE {
-                return Err(DNSPacketErr::LabelTooLarge(label.to_string(), label.len()));
+                return Err(DNSError::LabelTooLarge(label.to_string(), label.len()));
             }
 
             // If label sequence is not cached, cache it and write it to buffer.
@@ -129,9 +126,9 @@ mod tests {
 
         let mut dns_packet_buffer = DNSPacketBuffer::new(&domain_data);
 
-        let parsed_domain = DNSDomain::parse_domain(&mut dns_packet_buffer, 0).unwrap();
+        let parsed_domain = Domain::parse_domain(&mut dns_packet_buffer, 0).unwrap();
 
-        let expected_domain = DNSDomain("google.com".to_string());
+        let expected_domain = Domain("google.com".to_string());
         assert_eq!(parsed_domain, expected_domain);
     }
 
@@ -145,12 +142,12 @@ mod tests {
 
         let mut dns_packet_buffer = DNSPacketBuffer::new(&domain_data);
 
-        let parsed_domain1 = DNSDomain::parse_domain(&mut dns_packet_buffer, 0);
+        let parsed_domain1 = Domain::parse_domain(&mut dns_packet_buffer, 0);
         dns_packet_buffer.step(4); // Skip rest of the record information. Jump to next domain
-        let parsed_domain2 = DNSDomain::parse_domain(&mut dns_packet_buffer, 0);
+        let parsed_domain2 = Domain::parse_domain(&mut dns_packet_buffer, 0);
 
-        let expected_domain1 = Ok(DNSDomain("google.com".to_string()));
-        let expected_domain2 = Err(DNSPacketErr::MaxJumps);
+        let expected_domain1 = Ok(Domain("google.com".to_string()));
+        let expected_domain2 = Err(DNSError::MaxJumps);
 
         assert_eq!(parsed_domain1, expected_domain1);
         assert_eq!(parsed_domain2, expected_domain2);
@@ -158,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_write_to_buffer() {
-        let domain = DNSDomain("api.youtube.com".to_string());
+        let domain = Domain("api.youtube.com".to_string());
         let mut buffer = DNSPacketBuffer::new(&[]);
         domain.write_to_buffer(&mut buffer).unwrap();
 
@@ -175,8 +172,8 @@ mod tests {
 
     #[test]
     fn test_write_compression() {
-        let domain0 = DNSDomain("api.youtube.com".to_string());
-        let domain1 = DNSDomain("dev.youtube.com".to_string());
+        let domain0 = Domain("api.youtube.com".to_string());
+        let domain1 = Domain("dev.youtube.com".to_string());
         let mut buffer = DNSPacketBuffer::new(&[]);
         domain0.write_to_buffer(&mut buffer).unwrap();
         domain1.write_to_buffer(&mut buffer).unwrap();
@@ -196,11 +193,11 @@ mod tests {
     fn test_label_too_large() {
         let large_label =
             "apigodanfpandsadkjsabdjkasdjasjdnapfnapifamnfpkamnfpkanfpanspfasfpsanfpa".to_string();
-        let domain = DNSDomain(large_label.clone());
+        let domain = Domain(large_label.clone());
         let mut buffer = DNSPacketBuffer::new(&[]);
         let res = domain.write_to_buffer(&mut buffer);
 
-        let expected = Err(DNSPacketErr::LabelTooLarge(
+        let expected = Err(DNSError::LabelTooLarge(
             large_label.clone(),
             large_label.len(),
         ));
@@ -211,11 +208,11 @@ mod tests {
     #[test]
     fn test_domain_too_large() {
         let super_long_domain = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd".to_string();
-        let domain = DNSDomain(super_long_domain.clone());
+        let domain = Domain(super_long_domain.clone());
         let mut buffer = DNSPacketBuffer::new(&[]);
         let res = domain.write_to_buffer(&mut buffer);
 
-        let expected = Err(DNSPacketErr::DomainNameTooLarge(
+        let expected = Err(DNSError::DomainNameTooLarge(
             super_long_domain.clone(),
             super_long_domain.len(),
         ));

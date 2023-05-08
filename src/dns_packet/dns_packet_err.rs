@@ -1,8 +1,8 @@
-use super::DNSQueryType;
+use super::QueryType;
 // use std::error::Error;
 
 #[derive(Debug, PartialEq)]
-pub enum DNSPacketErr {
+pub enum DNSError {
     EndOfBuffer,
     BadPointerPosition,
     UnknownResponseCode(u8),
@@ -11,8 +11,8 @@ pub enum DNSPacketErr {
     BuffWrite,
     LabelTooLarge(String, usize),
     DomainNameTooLarge(String, usize),
-    UnimplementedRecordType(DNSQueryType),
+    UnimplementedRecordType(QueryType),
     UnknownRecord,
 }
 
-// impl Error for DNSPacketErr {};
+// impl Error for DNSError {};

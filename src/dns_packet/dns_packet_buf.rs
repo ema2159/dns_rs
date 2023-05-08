@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::DNSPacketErr;
+use super::DNSError;
 use super::PACKET_SIZE;
 
 #[derive(Debug, PartialEq)]
@@ -46,9 +46,9 @@ impl DNSPacketBuffer {
     }
 
     /// Read byte at current position. Don't move position pointer.
-    pub(crate) fn get_u8(&self) -> Result<u8, DNSPacketErr> {
+    pub(crate) fn get_u8(&self) -> Result<u8, DNSError> {
         if self.pos >= PACKET_SIZE {
-            return Err(DNSPacketErr::EndOfBuffer);
+            return Err(DNSError::EndOfBuffer);
         }
         let res = self.data[self.pos];
 
@@ -56,9 +56,9 @@ impl DNSPacketBuffer {
     }
 
     /// Read byte at current position and advance position pointer.
-    pub(crate) fn read_u8(&mut self) -> Result<u8, DNSPacketErr> {
+    pub(crate) fn read_u8(&mut self) -> Result<u8, DNSError> {
         if self.pos >= PACKET_SIZE {
-            return Err(DNSPacketErr::EndOfBuffer);
+            return Err(DNSError::EndOfBuffer);
         }
         let res = self.data[self.pos];
         self.pos += 1;
@@ -67,7 +67,7 @@ impl DNSPacketBuffer {
     }
 
     /// Read two bytes at current position and advance position pointer.
-    pub(crate) fn read_u16(&mut self) -> Result<u16, DNSPacketErr> {
+    pub(crate) fn read_u16(&mut self) -> Result<u16, DNSError> {
         let high = (self.read_u8()? as u16) << 8;
         let low = self.read_u8()? as u16;
 
@@ -75,7 +75,7 @@ impl DNSPacketBuffer {
     }
 
     /// Read four bytes at current position and advance position pointer.
-    pub(crate) fn read_u32(&mut self) -> Result<u32, DNSPacketErr> {
+    pub(crate) fn read_u32(&mut self) -> Result<u32, DNSError> {
         let first_byte = (self.read_u8()? as u32) << 24;
         let second_byte = (self.read_u8()? as u32) << 16;
         let third_byte = (self.read_u8()? as u32) << 8;
@@ -87,9 +87,9 @@ impl DNSPacketBuffer {
     // NOTE: Writing methods
 
     /// Write byte at current position and advance position pointer.
-    pub(crate) fn write_u8(&mut self, val: u8) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_u8(&mut self, val: u8) -> Result<(), DNSError> {
         if self.pos >= PACKET_SIZE {
-            return Err(DNSPacketErr::EndOfBuffer);
+            return Err(DNSError::EndOfBuffer);
         }
 
         self.data[self.pos] = val;
@@ -99,9 +99,9 @@ impl DNSPacketBuffer {
     }
 
     /// Write two bytes at current position and advance position pointer.
-    pub(crate) fn write_u16(&mut self, val: u16) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_u16(&mut self, val: u16) -> Result<(), DNSError> {
         if self.pos >= PACKET_SIZE {
-            return Err(DNSPacketErr::EndOfBuffer);
+            return Err(DNSError::EndOfBuffer);
         }
 
         let first_byte = (val >> 8) as u8;
@@ -114,9 +114,9 @@ impl DNSPacketBuffer {
     }
 
     /// Write four bytes at current position and advance position pointer.
-    pub(crate) fn write_u32(&mut self, val: u32) -> Result<(), DNSPacketErr> {
+    pub(crate) fn write_u32(&mut self, val: u32) -> Result<(), DNSError> {
         if self.pos >= PACKET_SIZE {
-            return Err(DNSPacketErr::EndOfBuffer);
+            return Err(DNSError::EndOfBuffer);
         }
 
         let first_byte = ((val >> 24) & 0x000000FF) as u8;
@@ -133,7 +133,7 @@ impl DNSPacketBuffer {
     }
 
     /// Writes two bytes at specified position. Keep position pointer in place.
-    pub(crate) fn set_u16(&mut self, pos: usize, val: u16) -> Result<(), DNSPacketErr> {
+    pub(crate) fn set_u16(&mut self, pos: usize, val: u16) -> Result<(), DNSError> {
         let curr_pos = self.get_pos();
         self.seek(pos);
         self.write_u16(val)?;
