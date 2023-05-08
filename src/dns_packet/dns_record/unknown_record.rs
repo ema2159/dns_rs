@@ -1,5 +1,3 @@
-#[cfg(test)]
-use super::PACKET_SIZE;
 use super::{
     DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite, RecordPreamble,
 };
@@ -29,7 +27,7 @@ impl RecordDataWrite for Unknown {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{Domain, Record, RecordData, HEADER_SIZE};
+    use super::super::{Domain, Record, RecordData, HEADER_SIZE, PACKET_SIZE};
     use super::*;
 
     #[test]

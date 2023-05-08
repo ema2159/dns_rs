@@ -5,11 +5,7 @@ mod mx_record;
 mod ns_record;
 mod soa_record;
 mod unknown_record;
-use super::DNSError;
-use super::DNSPacketBuffer;
-use super::Domain;
-use super::QueryType;
-use super::HEADER_SIZE;
+use super::{DNSError, DNSPacketBuffer, Domain, QueryType, HEADER_SIZE};
 #[cfg(test)]
 use super::PACKET_SIZE;
 
