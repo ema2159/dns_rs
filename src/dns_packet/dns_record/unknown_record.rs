@@ -1,12 +1,17 @@
 #[cfg(test)]
 use super::PACKET_SIZE;
-use super::{DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite};
+use super::{
+    DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite, RecordPreamble,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Unknown {}
 
 impl RecordDataRead for Unknown {
-    fn parse_from_buffer(_buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
+    fn parse_from_buffer(
+        _buffer: &mut DNSPacketBuffer,
+        _preamble: &RecordPreamble,
+    ) -> Result<Self, DNSError> {
         Ok(Unknown {})
     }
 }

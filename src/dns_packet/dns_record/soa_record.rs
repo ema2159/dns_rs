@@ -1,4 +1,6 @@
-use super::{DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite};
+use super::{
+    DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite, RecordPreamble,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct SOA {
@@ -12,7 +14,10 @@ pub struct SOA {
 }
 
 impl RecordDataRead for SOA {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        _preamble: &RecordPreamble,
+    ) -> Result<Self, DNSError> {
         Ok(SOA {
             mname: Domain::parse_domain(buffer, 0)?,
             rname: Domain::parse_domain(buffer, 0)?,

@@ -1,4 +1,6 @@
-use super::{DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite};
+use super::{
+    DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite, RecordPreamble,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct NS {
@@ -6,7 +8,10 @@ pub struct NS {
 }
 
 impl RecordDataRead for NS {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        _preamble: &RecordPreamble,
+    ) -> Result<Self, DNSError> {
         Ok(NS {
             nsdname: Domain::parse_domain(buffer, 0)?,
         })

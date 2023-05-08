@@ -1,4 +1,6 @@
-use super::{DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite};
+use super::{
+    DNSError, DNSPacketBuffer, QueryType, RecordDataRead, RecordDataWrite, RecordPreamble,
+};
 use std::net::Ipv6Addr;
 
 #[derive(Debug, PartialEq)]
@@ -7,7 +9,10 @@ pub struct AAAA {
 }
 
 impl RecordDataRead for AAAA {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        _preamble: &RecordPreamble,
+    ) -> Result<Self, DNSError> {
         Ok(AAAA {
             addr: Ipv6Addr::new(
                 buffer.read_u16()?,

@@ -42,6 +42,7 @@ fn stub_resolver_0() {
     let mut recv_data = [0; PACKET_SIZE];
 
     socket.recv_from(&mut recv_data).unwrap();
+    println!("{:02X?}", recv_data);
 
     let recv_packet = DNSPacket::parse_dns_packet(&mut DNSPacketBuffer::new(&recv_data));
 

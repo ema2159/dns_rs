@@ -51,7 +51,10 @@ pub enum RecordData {
 }
 
 trait RecordDataRead {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError>
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        preamble: &RecordPreamble,
+    ) -> Result<Self, DNSError>
     where
         Self: Sized;
 }
@@ -114,16 +117,22 @@ impl Record {
 
         let preamble = RecordPreamble::parse_from_buffer(buffer)?;
         let data = match preamble.record_type {
-            QueryType::A => Ok(RecordData::A(A::parse_from_buffer(buffer)?)),
-            QueryType::AAAA => Ok(RecordData::AAAA(AAAA::parse_from_buffer(buffer)?)),
-            QueryType::CNAME => Ok(RecordData::CNAME(CNAME::parse_from_buffer(buffer)?)),
-            QueryType::MX => Ok(RecordData::MX(MX::parse_from_buffer(buffer)?)),
-            QueryType::NS => Ok(RecordData::NS(NS::parse_from_buffer(buffer)?)),
-            QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer)?)),
+            QueryType::A => Ok(RecordData::A(A::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::AAAA => Ok(RecordData::AAAA(AAAA::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
+            QueryType::CNAME => Ok(RecordData::CNAME(CNAME::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
+            QueryType::MX => Ok(RecordData::MX(MX::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::NS => Ok(RecordData::NS(NS::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer, &preamble)?)),
             QueryType::Unknown(_) => {
                 // Skip reading package
                 buffer.step(preamble.len as usize);
-                Ok(RecordData::Unknown(Unknown::parse_from_buffer(buffer)?))
+                Ok(RecordData::Unknown(Unknown::parse_from_buffer(
+                    buffer, &preamble,
+                )?))
             }
             ref unimplemented_qtype => Err(DNSError::UnimplementedRecordType(
                 unimplemented_qtype.clone(),

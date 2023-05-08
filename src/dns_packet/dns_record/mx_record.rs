@@ -1,4 +1,6 @@
-use super::{DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite};
+use super::{
+    DNSError, DNSPacketBuffer, Domain, QueryType, RecordDataRead, RecordDataWrite, RecordPreamble,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct MX {
@@ -7,7 +9,10 @@ pub struct MX {
 }
 
 impl RecordDataRead for MX {
-    fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSError> {
+    fn parse_from_buffer(
+        buffer: &mut DNSPacketBuffer,
+        _preamble: &RecordPreamble,
+    ) -> Result<Self, DNSError> {
         Ok(MX {
             preference: buffer.read_u16()?,
             exchange: Domain::parse_domain(buffer, 0)?,
