@@ -42,7 +42,7 @@ impl DNSPacketBuffer {
 
     /// Return reference to data array.
     pub fn get_data(&self) -> &[u8] {
-        &self.data[0..self.pos]
+        &self.data
     }
 
     /// Read byte at current position. Don't move position pointer.
