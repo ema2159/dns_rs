@@ -4,13 +4,13 @@ use super::{
 
 #[derive(Debug, PartialEq)]
 pub struct CNAME {
-    pub value: DNSDomain,
+    pub cname: DNSDomain,
 }
 
 impl DNSRecordDataRead for CNAME {
     fn parse_from_buffer(buffer: &mut DNSPacketBuffer) -> Result<Self, DNSPacketErr> {
         Ok(CNAME {
-            value: DNSDomain::parse_domain(buffer, 0)?,
+            cname: DNSDomain::parse_domain(buffer, 0)?,
         })
     }
 }
@@ -20,7 +20,7 @@ impl DNSRecordDataWrite for CNAME {
         let len_field = buffer.get_pos() - 2;
         let starting_pos = buffer.get_pos();
 
-        self.value.write_to_buffer(buffer)?;
+        self.cname.write_to_buffer(buffer)?;
 
         let len = buffer.get_pos() - starting_pos;
         buffer.set_u16(len_field, len as u16)?;
@@ -57,7 +57,7 @@ mod tests {
             1,
             254,
             DNSRecordData::CNAME(CNAME {
-                value: DNSDomain("foo.example.com".to_string()),
+                cname: DNSDomain("foo.example.com".to_string()),
             }),
         );
 
@@ -72,7 +72,7 @@ mod tests {
             1,
             254,
             DNSRecordData::CNAME(CNAME {
-                value: DNSDomain("foo.example.com".to_string()),
+                cname: DNSDomain("foo.example.com".to_string()),
             }),
         );
 
