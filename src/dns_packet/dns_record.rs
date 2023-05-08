@@ -4,10 +4,11 @@ mod cname_record;
 mod mx_record;
 mod ns_record;
 mod soa_record;
+mod txt_record;
 mod unknown_record;
-use super::{DNSError, DNSPacketBuffer, Domain, QueryType, HEADER_SIZE};
 #[cfg(test)]
 use super::PACKET_SIZE;
+use super::{DNSError, DNSPacketBuffer, Domain, QueryType, HEADER_SIZE};
 
 use enum_dispatch::enum_dispatch;
 
@@ -17,6 +18,7 @@ pub use cname_record::CNAME;
 pub use mx_record::MX;
 pub use ns_record::NS;
 pub use soa_record::SOA;
+pub use txt_record::TXT;
 pub use unknown_record::Unknown;
 
 #[derive(Debug)]
@@ -43,6 +45,7 @@ pub enum RecordData {
     MX,
     NS,
     SOA,
+    TXT,
     Unknown,
 }
 
@@ -123,6 +126,7 @@ impl Record {
             QueryType::MX => Ok(RecordData::MX(MX::parse_from_buffer(buffer, &preamble)?)),
             QueryType::NS => Ok(RecordData::NS(NS::parse_from_buffer(buffer, &preamble)?)),
             QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::TXT => Ok(RecordData::TXT(TXT::parse_from_buffer(buffer, &preamble)?)),
             QueryType::Unknown(_) => Ok(RecordData::Unknown(Unknown::parse_from_buffer(
                 buffer, &preamble,
             )?)),
