@@ -2,6 +2,7 @@ mod a_record;
 mod aaaa_record;
 mod cname_record;
 mod mx_record;
+mod ns_record;
 mod soa_record;
 mod unknown_record;
 use super::DNSDomain;
@@ -18,6 +19,7 @@ pub use a_record::A;
 pub use aaaa_record::AAAA;
 pub use cname_record::CNAME;
 pub use mx_record::MX;
+pub use ns_record::NS;
 pub use soa_record::SOA;
 pub use unknown_record::Unknown;
 
@@ -43,6 +45,7 @@ pub enum DNSRecordData {
     AAAA,
     CNAME,
     MX,
+    NS,
     SOA,
     Unknown,
 }
@@ -115,6 +118,7 @@ impl DNSRecord {
             DNSQueryType::AAAA => Ok(DNSRecordData::AAAA(AAAA::parse_from_buffer(buffer)?)),
             DNSQueryType::CNAME => Ok(DNSRecordData::CNAME(CNAME::parse_from_buffer(buffer)?)),
             DNSQueryType::MX => Ok(DNSRecordData::MX(MX::parse_from_buffer(buffer)?)),
+            DNSQueryType::NS => Ok(DNSRecordData::NS(NS::parse_from_buffer(buffer)?)),
             DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(buffer)?)),
             DNSQueryType::Unknown(_) => {
                 // Skip reading package
