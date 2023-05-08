@@ -1,6 +1,7 @@
 mod a_record;
 mod aaaa_record;
 mod cname_record;
+mod mx_record;
 mod soa_record;
 mod unknown_record;
 use super::DNSDomain;
@@ -16,6 +17,7 @@ use enum_dispatch::enum_dispatch;
 pub use a_record::A;
 pub use aaaa_record::AAAA;
 pub use cname_record::CNAME;
+pub use mx_record::MX;
 pub use soa_record::SOA;
 pub use unknown_record::Unknown;
 
@@ -40,6 +42,7 @@ pub enum DNSRecordData {
     A,
     AAAA,
     CNAME,
+    MX,
     SOA,
     Unknown,
 }
@@ -110,8 +113,9 @@ impl DNSRecord {
         let data = match preamble.record_type {
             DNSQueryType::A => Ok(DNSRecordData::A(A::parse_from_buffer(buffer)?)),
             DNSQueryType::AAAA => Ok(DNSRecordData::AAAA(AAAA::parse_from_buffer(buffer)?)),
-            DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(buffer)?)),
             DNSQueryType::CNAME => Ok(DNSRecordData::CNAME(CNAME::parse_from_buffer(buffer)?)),
+            DNSQueryType::MX => Ok(DNSRecordData::MX(MX::parse_from_buffer(buffer)?)),
+            DNSQueryType::SOA => Ok(DNSRecordData::SOA(SOA::parse_from_buffer(buffer)?)),
             DNSQueryType::Unknown(_) => {
                 // Skip reading package
                 buffer.step(preamble.len as usize);
