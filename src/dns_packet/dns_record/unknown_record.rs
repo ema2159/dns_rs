@@ -9,9 +9,11 @@ pub struct Unknown {}
 
 impl RecordDataRead for Unknown {
     fn parse_from_buffer(
-        _buffer: &mut DNSPacketBuffer,
-        _preamble: &RecordPreamble,
+        buffer: &mut DNSPacketBuffer,
+        preamble: &RecordPreamble,
     ) -> Result<Self, DNSError> {
+        // Skip reading package
+        buffer.step(preamble.len as usize);
         Ok(Unknown {})
     }
 }

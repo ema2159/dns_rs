@@ -127,13 +127,9 @@ impl Record {
             QueryType::MX => Ok(RecordData::MX(MX::parse_from_buffer(buffer, &preamble)?)),
             QueryType::NS => Ok(RecordData::NS(NS::parse_from_buffer(buffer, &preamble)?)),
             QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer, &preamble)?)),
-            QueryType::Unknown(_) => {
-                // Skip reading package
-                buffer.step(preamble.len as usize);
-                Ok(RecordData::Unknown(Unknown::parse_from_buffer(
-                    buffer, &preamble,
-                )?))
-            }
+            QueryType::Unknown(_) => Ok(RecordData::Unknown(Unknown::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
             ref unimplemented_qtype => Err(DNSError::UnimplementedRecordType(
                 unimplemented_qtype.clone(),
             )),
