@@ -3,6 +3,7 @@ mod aaaa_record;
 mod cname_record;
 mod mx_record;
 mod ns_record;
+mod ptr_record;
 mod soa_record;
 mod txt_record;
 mod unknown_record;
@@ -17,6 +18,7 @@ pub use aaaa_record::AAAA;
 pub use cname_record::CNAME;
 pub use mx_record::MX;
 pub use ns_record::NS;
+pub use ptr_record::PTR;
 pub use soa_record::SOA;
 pub use txt_record::TXT;
 pub use unknown_record::Unknown;
@@ -44,6 +46,7 @@ pub enum RecordData {
     CNAME,
     MX,
     NS,
+    PTR,
     SOA,
     TXT,
     Unknown,
@@ -125,6 +128,7 @@ impl Record {
             )?)),
             QueryType::MX => Ok(RecordData::MX(MX::parse_from_buffer(buffer, &preamble)?)),
             QueryType::NS => Ok(RecordData::NS(NS::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::PTR => Ok(RecordData::PTR(PTR::parse_from_buffer(buffer, &preamble)?)),
             QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer, &preamble)?)),
             QueryType::TXT => Ok(RecordData::TXT(TXT::parse_from_buffer(buffer, &preamble)?)),
             QueryType::Unknown(_) => Ok(RecordData::Unknown(Unknown::parse_from_buffer(
