@@ -1,6 +1,7 @@
 mod a_record;
 mod aaaa_record;
 mod cname_record;
+mod dname_record;
 mod mx_record;
 mod ns_record;
 mod ptr_record;
@@ -16,6 +17,7 @@ use enum_dispatch::enum_dispatch;
 pub use a_record::A;
 pub use aaaa_record::AAAA;
 pub use cname_record::CNAME;
+pub use dname_record::DNAME;
 pub use mx_record::MX;
 pub use ns_record::NS;
 pub use ptr_record::PTR;
@@ -44,6 +46,7 @@ pub enum RecordData {
     A,
     AAAA,
     CNAME,
+    DNAME,
     MX,
     NS,
     PTR,
@@ -124,6 +127,9 @@ impl Record {
                 buffer, &preamble,
             )?)),
             QueryType::CNAME => Ok(RecordData::CNAME(CNAME::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
+            QueryType::DNAME => Ok(RecordData::DNAME(DNAME::parse_from_buffer(
                 buffer, &preamble,
             )?)),
             QueryType::MX => Ok(RecordData::MX(MX::parse_from_buffer(buffer, &preamble)?)),
