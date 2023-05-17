@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_write_cname() {
-        let a_record = Record::new(
+        let cname_record = Record::new(
             Domain("bar.example.com".to_string()),
             1,
             254,
@@ -81,7 +81,7 @@ mod tests {
 
         let mut buffer = DNSPacketBuffer::new(&[]);
         buffer.seek(HEADER_SIZE);
-        a_record.write_to_buffer(&mut buffer).unwrap();
+        cname_record.write_to_buffer(&mut buffer).unwrap();
 
         // Expected
         let expected_data = [

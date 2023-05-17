@@ -42,7 +42,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_read_cname() {
+    fn test_read_dname() {
         let dns_packet_data = [
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x62,
             0x61, 0x72, 0x07, 0x65, 0x78, 0x61, 0x6D, 0x70, 0x6C, 0x65, 0x03, 0x63, 0x6F, 0x6D,
@@ -69,8 +69,8 @@ mod tests {
     }
 
     #[test]
-    fn test_write_cname() {
-        let a_record = Record::new(
+    fn test_write_dname() {
+        let dname_record = Record::new(
             Domain("bar.example.com".to_string()),
             1,
             254,
@@ -81,7 +81,7 @@ mod tests {
 
         let mut buffer = DNSPacketBuffer::new(&[]);
         buffer.seek(HEADER_SIZE);
-        a_record.write_to_buffer(&mut buffer).unwrap();
+        dname_record.write_to_buffer(&mut buffer).unwrap();
 
         // Expected
         let expected_data = [
