@@ -6,6 +6,7 @@ mod mx_record;
 mod ns_record;
 mod ptr_record;
 mod soa_record;
+mod srv_record;
 mod txt_record;
 mod unknown_record;
 #[cfg(test)]
@@ -22,6 +23,7 @@ pub use mx_record::MX;
 pub use ns_record::NS;
 pub use ptr_record::PTR;
 pub use soa_record::SOA;
+pub use srv_record::SRV;
 pub use txt_record::TXT;
 pub use unknown_record::Unknown;
 
@@ -51,6 +53,7 @@ pub enum RecordData {
     NS,
     PTR,
     SOA,
+    SRV,
     TXT,
     Unknown,
 }
@@ -136,6 +139,7 @@ impl Record {
             QueryType::NS => Ok(RecordData::NS(NS::parse_from_buffer(buffer, &preamble)?)),
             QueryType::PTR => Ok(RecordData::PTR(PTR::parse_from_buffer(buffer, &preamble)?)),
             QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::SRV => Ok(RecordData::SRV(SRV::parse_from_buffer(buffer, &preamble)?)),
             QueryType::TXT => Ok(RecordData::TXT(TXT::parse_from_buffer(buffer, &preamble)?)),
             QueryType::Unknown(_) => Ok(RecordData::Unknown(Unknown::parse_from_buffer(
                 buffer, &preamble,
