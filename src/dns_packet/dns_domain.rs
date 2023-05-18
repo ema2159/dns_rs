@@ -57,7 +57,7 @@ impl Domain {
 
             // [b'g', b'o', b'o', b'g', b'l', b'e'] -> "google"
             let label =
-                (String::from_utf8(label_buf).map_err(|_| DNSError::NonUTF8Label)?).to_lowercase();
+                (String::from_utf8(label_buf).map_err(|_| DNSError::NonUTF8)?).to_lowercase();
 
             // ["google"].push("com")
             labels_buf.push(label);

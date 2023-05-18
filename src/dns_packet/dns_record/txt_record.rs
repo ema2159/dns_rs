@@ -14,7 +14,7 @@ impl RecordDataRead for TXT {
     ) -> Result<Self, DNSError> {
         let curr_pos = buffer.get_pos();
         let txt_slice = &buffer.get_data()[curr_pos..curr_pos + preamble.len as usize];
-        let txt_str = String::from_utf8(txt_slice.to_vec()).map_err(|_| DNSError::NonUTF8Label)?;
+        let txt_str = String::from_utf8(txt_slice.to_vec()).map_err(|_| DNSError::NonUTF8)?;
 
         buffer.step(preamble.len as usize);
 

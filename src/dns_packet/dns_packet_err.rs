@@ -6,13 +6,14 @@ pub enum DNSError {
     EndOfBuffer,
     BadPointerPosition,
     UnknownResponseCode(u8),
-    NonUTF8Label,
+    NonUTF8,
     MaxJumps,
     BuffWrite,
     LabelTooLarge(String, usize),
     DomainNameTooLarge(String, usize),
     UnimplementedRecordType(QueryType),
     UnknownRecord,
+    Unassigned,
 }
 
 // impl Error for DNSError {};
