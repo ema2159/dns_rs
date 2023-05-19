@@ -12,8 +12,8 @@ pub enum DNSError {
     LabelTooLarge(String, usize),
     DomainNameTooLarge(String, usize),
     UnimplementedRecordType(QueryType),
-    UnknownRecord,
     Unassigned,
+    UnknownRecordWrite,
 }
 
 // impl Error for DNSError {};

@@ -17,7 +17,7 @@ impl RecordDataRead for Unknown {
 }
 impl RecordDataWrite for Unknown {
     fn write_to_buffer(&self, _buffer: &mut DNSPacketBuffer) -> Result<(), DNSError> {
-        Err(DNSError::UnknownRecord)
+        Err(DNSError::UnknownRecordWrite)
     }
 
     fn query_type(&self) -> QueryType {
@@ -63,7 +63,7 @@ mod tests {
         buffer.seek(HEADER_SIZE);
         let err = unknown_record.write_to_buffer(&mut buffer);
 
-        let expected_err = Err(DNSError::UnknownRecord);
+        let expected_err = Err(DNSError::UnknownRecordWrite);
 
         assert_eq!(err, expected_err)
     }
