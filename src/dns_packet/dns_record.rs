@@ -7,6 +7,7 @@ mod ns_record;
 mod ptr_record;
 mod soa_record;
 mod srv_record;
+mod sshfp_record;
 mod txt_record;
 mod unknown_record;
 #[cfg(test)]
