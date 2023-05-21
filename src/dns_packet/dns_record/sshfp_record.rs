@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn test_write_sshfp() {
-        let a_record = Record::new(
+        let sshfp_record = Record::new(
             Domain("bar.example.com".to_string()),
             1,
             16777469,
@@ -189,7 +189,7 @@ mod tests {
 
         let mut buffer = DNSPacketBuffer::new(&[]);
         buffer.seek(HEADER_SIZE);
-        a_record.write_to_buffer(&mut buffer).unwrap();
+        sshfp_record.write_to_buffer(&mut buffer).unwrap();
 
         // Expected
         let expected_data = [
