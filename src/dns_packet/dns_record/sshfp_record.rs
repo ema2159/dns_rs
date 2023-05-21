@@ -105,14 +105,14 @@ impl RecordDataWrite for SSHFP {
 
         let algorithm = match self.algorithm {
             Algorithm::Reserved | Algorithm::Unassigned(_) => {
-                return Err(DNSError::ReservedOrUnassigned)
+                return Err(DNSError::ReservedOrUnassigned(self.query_type()))
             }
             _ => self.algorithm.to_num(),
         };
 
         let fingerprint_type = match self.fingerprint_type {
             FingerprintType::Reserved | FingerprintType::Unassigned(_) => {
-                return Err(DNSError::ReservedOrUnassigned)
+                return Err(DNSError::ReservedOrUnassigned(self.query_type()))
             }
             _ => self.fingerprint_type.to_num(),
         };
