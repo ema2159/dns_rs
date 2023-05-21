@@ -69,9 +69,9 @@ impl FingerprintType {
 
 #[derive(Debug, PartialEq)]
 pub struct SSHFP {
-    pub algorithm: Algorithm,
-    pub fingerprint_type: FingerprintType,
-    pub fingerprint: String,
+    pub algorithm: Algorithm,              // 1 byte
+    pub fingerprint_type: FingerprintType, // 1 byte
+    pub fingerprint: String,               // Variable length
 }
 
 impl RecordDataRead for SSHFP {
@@ -114,7 +114,7 @@ impl RecordDataWrite for SSHFP {
             FingerprintType::Reserved | FingerprintType::Unassigned(_) => {
                 return Err(DNSError::ReservedOrUnassigned)
             }
-            _ => self.algorithm.to_num(),
+            _ => self.fingerprint_type.to_num(),
         };
 
         buffer.write_u8(algorithm)?;
