@@ -143,7 +143,9 @@ impl Record {
             QueryType::PTR => Ok(RecordData::PTR(PTR::parse_from_buffer(buffer, &preamble)?)),
             QueryType::SOA => Ok(RecordData::SOA(SOA::parse_from_buffer(buffer, &preamble)?)),
             QueryType::SRV => Ok(RecordData::SRV(SRV::parse_from_buffer(buffer, &preamble)?)),
-            QueryType::SSHFP => Ok(RecordData::SSHFP(SSHFP::parse_from_buffer(buffer, &preamble)?)),
+            QueryType::SSHFP => Ok(RecordData::SSHFP(SSHFP::parse_from_buffer(
+                buffer, &preamble,
+            )?)),
             QueryType::TXT => Ok(RecordData::TXT(TXT::parse_from_buffer(buffer, &preamble)?)),
             QueryType::Unknown(_) => Ok(RecordData::Unknown(Unknown::parse_from_buffer(
                 buffer, &preamble,
